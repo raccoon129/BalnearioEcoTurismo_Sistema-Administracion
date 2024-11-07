@@ -1,0 +1,35 @@
+/* Estilos para la rueda de carga */
+.loader {
+    border: 5px solid #ffffff;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s ease-in-out infinite;
+    position: absolute; /* Para centrar el loader */
+    top: 50%; /* Centrar verticalmente */
+    left: 50%; /* Centrar horizontalmente */
+    transform: translate(-50%, -50%); /* Ajustar el centro */
+}
+
+/* Animación de rotación */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(-360deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilo para el contenedor del loader */
+.loader-container {
+    position: fixed; /* Fijo para cubrir toda la pantalla */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* Fondo semi-transparente */
+    display: flex; /* Usar flexbox para centrar */
+    justify-content: center; /* Centrar horizontalmente */
+    align-items: center; /* Centrar verticalmente */
+    z-index: 9999; /* Asegurarse de que esté por encima de otros elementos */
+    display: none; /* Ocultar por defecto */
+} 
