@@ -12,7 +12,7 @@
 <body class="bg-light p-4">
     <?php
     require_once '../../config/database.php';
-    require_once '../../controllers/balneario/EstadisticasController.php';
+    require_once '../../controllers/balneario/inicio/EstadisticasController.php';
     
     session_start();
     $database = new Database();

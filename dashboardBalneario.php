@@ -23,11 +23,11 @@
         <h4>Panel administrativo para Balnearios</h4>
         <br>
         <a href="#" onclick="loadPage('views/dashboard/bienvenida_balneario.php', this)" id="inicioLink"><i class="fas fa-home"></i> Inicio</a>
-        <a href="#" onclick="loadPage('mi_balneario.html', this)"><i class="fas fa-user"></i> Mi Balneario</a>
-        <a href="#" onclick="loadPage('eventos.html', this)"><i class="fas fa-calendar-alt"></i> Eventos</a>
-        <a href="#" onclick="loadPage('promociones.html', this)"><i class="fas fa-tags"></i> Promociones</a>
-        <a href="#" onclick="loadPage('opiniones.html', this)"><i class="fas fa-comments"></i> Opiniones</a>
-        <a href="#" onclick="loadPage('boletines.html', this)"><i class="fas fa-envelope"></i> Boletines</a>
+        <a href="#" onclick="loadPage('views/balneario/mi_balneario/detalles.php', this)"><i class="fas fa-user"></i> Mi Balneario</a>
+        <a href="#" onclick="loadPage('views/balneario/eventos/lista.php', this)"><i class="fas fa-calendar-alt"></i> Eventos</a>
+        <a href="#" onclick="loadPage('views/balneario/promociones/lista.php', this)"><i class="fas fa-tags"></i> Promociones</a>
+        <a href="#" onclick="loadPage('views/balneario/opiniones.php', this)"><i class="fas fa-comments"></i> Opiniones</a>
+        <a href="#" onclick="loadPage('views/balneario/boletines.php', this)"><i class="fas fa-envelope"></i> Boletines</a>
     </div>
 
     <div class="content" style="background-color: #f8f9fa;">
@@ -38,6 +38,7 @@
     <script>
         function loadPage(page, element) {
             document.getElementById('loader').style.display = 'block';
+            document.querySelector('.content').classList.add('content-blur');
 
             const links = document.querySelectorAll('.sidebar a');
             links.forEach(link => {

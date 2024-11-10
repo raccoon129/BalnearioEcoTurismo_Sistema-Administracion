@@ -19,6 +19,11 @@
     100% { transform: rotate(360deg); }
 }
 
+/* Estilo para el loader */
+.loader {
+    z-index: 1000; /* Asegurarse de que esté por encima de otros elementos */
+}
+
 /* Estilo para el contenedor del loader */
 .loader-container {
     position: fixed; /* Fijo para cubrir toda la pantalla */
@@ -32,4 +37,9 @@
     align-items: center; /* Centrar verticalmente */
     z-index: 9999; /* Asegurarse de que esté por encima de otros elementos */
     display: none; /* Ocultar por defecto */
+}
+
+/* Efecto de desenfoque en el contenido detrás del loader */
+.content-blur {
+    backdrop-filter: blur(5px); /* Ajusta el nivel de desenfoque según sea necesario */
 } 
