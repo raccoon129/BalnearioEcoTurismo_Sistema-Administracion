@@ -16,6 +16,9 @@ try {
     $auth->checkAuth();
     $auth->checkRole(['administrador_balneario']);
 
+    // Obtener el ID del usuario autenticado
+    $id_usuario = $auth->getUsuarioId();
+
     // Verificar datos recibidos
     if (!isset($_POST['id_evento']) || !isset($_POST['titulo_boletin']) || !isset($_POST['contenido_boletin'])) {
         throw new Exception('Faltan datos requeridos');
@@ -34,12 +37,12 @@ try {
         throw new Exception('No tiene permiso para convertir este evento');
     }
 
-    // Crear el boletín
+    // Crear el boletín usando el ID del usuario autenticado
     $boletinController = new BoletinController($db);
     $resultado = $boletinController->crearBoletin(
         $_POST['titulo_boletin'],
         $_POST['contenido_boletin'],
-        $_SESSION['id_usuario'],
+        $id_usuario,
         true // es_borrador = true
     );
 
