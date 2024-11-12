@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de Balnearios</title>
+    <title>Dashboard para Balnearios - Sistema de Administración para Balnearios Eco Turismo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/estilo_dashboard.css">
@@ -20,14 +20,14 @@
     </nav>
 
     <div class="sidebar">
-        <h4>Panel administrativo para Balnearios</h4>
+        <h4><strong>Panel administrativo para Balnearios</strong></h4>
         <br>
         <a href="#" onclick="loadPage('views/dashboard/bienvenida_balneario.php', this)" id="inicioLink"><i class="fas fa-home"></i> Inicio</a>
         <a href="#" onclick="loadPage('views/balneario/mi_balneario/detalles.php', this)"><i class="fas fa-user"></i> Mi Balneario</a>
         <a href="#" onclick="loadPage('views/balneario/eventos/lista.php', this)"><i class="fas fa-calendar-alt"></i> Eventos</a>
         <a href="#" onclick="loadPage('views/balneario/promociones/lista.php', this)"><i class="fas fa-tags"></i> Promociones</a>
-        <a href="#" onclick="loadPage('views/balneario/opiniones.php', this)"><i class="fas fa-comments"></i> Opiniones</a>
-        <a href="#" onclick="loadPage('views/balneario/boletines.php', this)"><i class="fas fa-envelope"></i> Boletines</a>
+        <a href="#" onclick="loadPage('views/balneario/opiniones/lista.php', this)"><i class="fas fa-comments"></i> Opiniones</a>
+        <a href="#" onclick="loadPage('views/balneario/boletines/lista.php', this)"><i class="fas fa-envelope"></i> Boletines</a>
     </div>
 
     <div class="content" style="background-color: #f8f9fa;">
