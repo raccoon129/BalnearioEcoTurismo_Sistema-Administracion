@@ -105,7 +105,13 @@
                                     <button class="btn btn-sm btn-danger" onclick="confirmarEliminacion(<?php echo $evento['id_evento']; ?>)">
                                         <i class="bi bi-trash"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-success" onclick="convertirABoletin(<?php echo $evento['id_evento']; ?>)">
+                                    <button class="btn btn-sm btn-success" onclick="convertirABoletin(
+                                        <?php echo $evento['id_evento']; ?>, 
+                                        '<?php echo htmlspecialchars($evento['titulo_evento']); ?>', 
+                                        '<?php echo htmlspecialchars($evento['descripcion_evento']); ?>', 
+                                        '<?php echo $evento['fecha_inicio_evento']; ?>', 
+                                        '<?php echo $evento['fecha_fin_evento']; ?>'
+                                    )">
                                         <i class="bi bi-envelope"></i>
                                     </button>
                                 </td>
@@ -197,8 +203,8 @@
         </div>
     </div>
 
-    <!-- Modal de Convertir a Boletín -->
-    <div class="modal fade" id="modalConvertirBoletin" tabindex="-1">
+    <!-- Modal de Confirmación de Conversión a Boletín -->
+    <div class="modal fade" id="modalConfirmarConversion" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -208,15 +214,15 @@
                 <div class="modal-body">
                     <p>¿Desea crear un boletín con la información de este evento?</p>
                     <p>Se creará un borrador que podrá revisar antes de enviarlo.</p>
+                    <div id="previewContenido" class="mt-3 p-3 bg-light rounded">
+                        <!-- Aquí se mostrará la vista previa del contenido -->
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form action="../../controllers/balneario/eventos/convertir_boletin.php" method="POST">
-                        <input type="hidden" name="id_evento" id="id_evento_convertir">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-envelope me-2"></i>Crear Boletín
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-success" id="btnConfirmarConversion">
+                        <i class="bi bi-envelope me-2"></i>Crear Boletín
+                    </button>
                 </div>
             </div>
         </div>
@@ -231,6 +237,28 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 
     <script>
+        // En eventos/lista.php y promociones/lista.php
+document.getElementById('btnConfirmarConversion').addEventListener('click', function() {
+    if (!datosConversion) return;
+
+    // Enviar datos al controlador
+    $.post('../../../controllers/balneario/boletines/convertir_evento.php', datosConversion)
+        .done(function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                setTimeout(() => window.location.href = '../boletines/lista.php', 1500);
+            } else {
+                toastr.error(response.message || 'Error al convertir el evento');
+            }
+        })
+        .fail(function(xhr) {
+            const errorResponse = xhr.responseJSON || {};
+            toastr.error(errorResponse.message || 'Error al procesar la solicitud');
+        });
+
+    // Cerrar el modal
+    bootstrap.Modal.getInstance(document.getElementById('modalConfirmarConversion')).hide();
+});
         $(document).ready(function() {
             $('#tablaEventos').DataTable({
                 responsive: true,
@@ -265,10 +293,68 @@
             new bootstrap.Modal(document.getElementById('modalConfirmarEliminacion')).show();
         }
 
-        function convertirABoletin(id) {
-            document.getElementById('id_evento_convertir').value = id;
-            new bootstrap.Modal(document.getElementById('modalConvertirBoletin')).show();
+        let datosConversion = null;
+
+        function convertirABoletin(id, titulo, descripcion, fechaInicio, fechaFin) {
+            // Formatear las fechas
+            const fechaInicioObj = new Date(fechaInicio);
+            const fechaFinObj = new Date(fechaFin);
+            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            
+            const fechaInicioFormateada = fechaInicioObj.toLocaleDateString('es-ES', opciones);
+            const fechaFinFormateada = fechaFinObj.toLocaleDateString('es-ES', opciones);
+            
+            // Crear el contenido del boletín
+            const contenido = `${descripcion}\n\nFecha del evento: Del ${fechaInicioFormateada} hasta ${fechaFinFormateada}`;
+            
+            // Guardar datos para usar después de la confirmación
+            datosConversion = {
+                id_evento: id,
+                titulo_boletin: titulo,
+                contenido_boletin: contenido
+            };
+
+            // Mostrar vista previa en el modal
+            document.getElementById('previewContenido').innerHTML = `
+                <strong>${titulo}</strong><br><br>
+                ${contenido.replace(/\n/g, '<br>')}
+            `;
+
+            // Mostrar el modal
+            new bootstrap.Modal(document.getElementById('modalConfirmarConversion')).show();
         }
+
+        // Un solo manejador para el botón de confirmación
+        document.getElementById('btnConfirmarConversion').addEventListener('click', function() {
+            if (!datosConversion) return;
+
+            // Mostrar indicador de carga
+            toastr.info('Procesando...');
+
+            // Enviar datos al controlador
+            $.ajax({
+                url: '../../../controllers/balneario/boletines/convertir_evento.php',
+                method: 'POST',
+                data: datosConversion,
+                dataType: 'json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    toastr.success(response.message);
+                    setTimeout(() => window.location.href = '../boletines/lista.php', 1500);
+                } else {
+                    toastr.error(response.message || 'Error al convertir el evento');
+                }
+            })
+            .fail(function(xhr) {
+                const errorResponse = xhr.responseJSON || {};
+                toastr.error(errorResponse.message || 'Error al procesar la solicitud');
+            })
+            .always(function() {
+                // Cerrar el modal
+                bootstrap.Modal.getInstance(document.getElementById('modalConfirmarConversion')).hide();
+            });
+        });
     </script>
 </body>
 </html>
