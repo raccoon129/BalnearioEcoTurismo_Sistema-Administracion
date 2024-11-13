@@ -14,6 +14,9 @@ try {
     $auth->checkAuth();
     $auth->checkRole(['administrador_balneario']);
 
+    // Obtener el ID del usuario autenticado
+    $id_usuario = $auth->getUsuarioId();
+
     // Verificar que se recibieron los datos necesarios
     if (!isset($_POST['titulo']) || !isset($_POST['contenido'])) {
         throw new Exception('Faltan datos requeridos');
@@ -29,11 +32,11 @@ try {
 
     $boletinController = new BoletinController($db);
     
-    // Crear el boletín como borrador
+    // Crear el boletín como borrador usando el ID del usuario autenticado
     $resultado = $boletinController->crearBoletin(
         $titulo,
         $contenido,
-        $_SESSION['id_usuario'],
+        $id_usuario,
         true // es_borrador = true
     );
 

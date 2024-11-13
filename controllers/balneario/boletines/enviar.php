@@ -2,6 +2,7 @@
 require_once '../../../config/database.php';
 require_once '../../../config/auth.php';
 require_once './BoletinController.php';
+require_once '../../../vendor/autoload.php'; // Para PHPMailer
 
 session_start();
 
@@ -14,7 +15,6 @@ try {
     $auth->checkAuth();
     $auth->checkRole(['administrador_balneario']);
 
-    // Verificar que se recibió el ID del boletín
     if (!isset($_POST['id_boletin'])) {
         throw new Exception('ID de boletín no proporcionado');
     }
@@ -25,20 +25,17 @@ try {
     }
 
     $boletinController = new BoletinController($db);
-    
-    // Verificar que el boletín existe y pertenece al balneario
-    $boletin = $boletinController->obtenerBoletin($id_boletin, $_SESSION['id_balneario']);
-    if (!$boletin) {
-        throw new Exception('Boletín no encontrado o sin permisos para enviarlo');
-    }
+    $resultado = $boletinController->enviarBoletin($id_boletin, $_SESSION['id_balneario']);
 
-    // Enviar el boletín
-    $resultado = $boletinController->enviarBoletin($id_boletin);
-
-    if ($resultado === true) {
-        header('Location: ../../../views/balneario/boletines/lista.php?success=' . urlencode('Boletín enviado exitosamente'));
+    if ($resultado['success']) {
+        $mensaje = sprintf(
+            'Boletín enviado exitosamente a %d de %d suscriptores', 
+            $resultado['enviados'], 
+            $resultado['total_suscriptores']
+        );
+        header('Location: ../../../views/balneario/boletines/lista.php?success=' . urlencode($mensaje));
     } else {
-        throw new Exception($resultado);
+        throw new Exception('Error al enviar el boletín: ' . $resultado['message']);
     }
 
 } catch (Exception $e) {

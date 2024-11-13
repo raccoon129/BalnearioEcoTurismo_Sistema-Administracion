@@ -13,6 +13,69 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Toastr CSS -->
     <link href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
+    <style>
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .table {
+            margin-bottom: 0;
+            width: 100% !important;
+        }
+        
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 0.5rem;
+        }
+        
+        .card {
+            margin-bottom: 1rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        /* Ajustes para DataTables */
+        .dataTables_wrapper {
+            padding: 0;
+            width: 100% !important;
+        }
+        
+        .dataTables_filter, .dataTables_length {
+            padding: 0.5rem;
+        }
+        
+        .dataTables_info, .dataTables_paginate {
+            padding: 0.5rem;
+        }
+        
+        /* Ajustes para los botones de acción */
+        .btn-group {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+        }
+        
+        /* Ajustes para las pestañas */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .nav-tabs .nav-link {
+            margin-bottom: -2px;
+            border: none;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .nav-tabs .nav-link.active {
+            border-bottom: 2px solid #0d6efd;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body class="bg-light p-4">
     <?php
@@ -67,7 +130,17 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#enviados">
-                    <i class="bi bi-send me-2"></i>Enviados
+                    <i class="bi bi-send me-2"></i>Enviados Recientemente
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#historial">
+                    <i class="bi bi-clock-history me-2"></i>Historial
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#suscriptores">
+                    <i class="bi bi-people me-2"></i>Suscriptores
                 </a>
             </li>
         </ul>
@@ -158,6 +231,131 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Nueva pestaña de Historial -->
+            <div class="tab-pane fade" id="historial">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="tablaHistorial" class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Fecha de Envío</th>
+                                        <th>Enviado por</th>
+                                        <th>Destinatarios</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    // Obtener historial de boletines enviados con estadísticas
+                                    $query = "SELECT b.*, u.nombre_usuario,
+                                             (SELECT COUNT(DISTINCT email_usuario) 
+                                              FROM opiniones_usuarios 
+                                              WHERE id_balneario = u.id_balneario 
+                                              AND suscripcion_boletin = 1 
+                                              AND fecha_registro_opinion <= b.fecha_envio_boletin) as total_destinatarios
+                                             FROM boletines b 
+                                             INNER JOIN usuarios u ON b.id_usuario = u.id_usuario 
+                                             WHERE u.id_balneario = ? 
+                                             AND b.fecha_envio_boletin IS NOT NULL 
+                                             ORDER BY b.fecha_envio_boletin DESC";
+                                    
+                                    $stmt = $db->prepare($query);
+                                    $stmt->bind_param("i", $_SESSION['id_balneario']);
+                                    $stmt->execute();
+                                    $historial = $stmt->get_result();
+
+                                    while ($boletin = $historial->fetch_assoc()):
+                                        // Calcular tiempo transcurrido
+                                        $fecha_envio = new DateTime($boletin['fecha_envio_boletin']);
+                                        $ahora = new DateTime();
+                                        $intervalo = $fecha_envio->diff($ahora);
+                                    ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($boletin['titulo_boletin']); ?></td>
+                                        <td>
+                                            <span title="<?php echo $fecha_envio->format('d/m/Y H:i'); ?>">
+                                                <?php
+                                                if ($intervalo->days == 0) {
+                                                    echo 'Hoy ' . $fecha_envio->format('H:i');
+                                                } elseif ($intervalo->days == 1) {
+                                                    echo 'Ayer ' . $fecha_envio->format('H:i');
+                                                } else {
+                                                    echo $fecha_envio->format('d/m/Y H:i');
+                                                }
+                                                ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($boletin['nombre_usuario']); ?></td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                <?php echo $boletin['total_destinatarios']; ?> destinatarios
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="ver.php?id=<?php echo $boletin['id_boletin']; ?>" 
+                                                   class="btn btn-sm btn-info" title="Ver detalles">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-danger" 
+                                                        onclick="confirmarEliminacion(<?php echo $boletin['id_boletin']; ?>)"
+                                                        title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nueva pestaña de Suscriptores -->
+            <div class="tab-pane fade" id="suscriptores">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="tablaSuscriptores" class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Fecha de Suscripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $query = "SELECT nombre_usuario, email_usuario, telefono_usuario, fecha_registro_opinion 
+                                             FROM opiniones_usuarios 
+                                             WHERE id_balneario = ? AND suscripcion_boletin = 1
+                                             ORDER BY fecha_registro_opinion DESC";
+                                    $stmt = $db->prepare($query);
+                                    $stmt->bind_param("i", $_SESSION['id_balneario']);
+                                    $stmt->execute();
+                                    $suscriptores = $stmt->get_result();
+                                    
+                                    while ($suscriptor = $suscriptores->fetch_assoc()):
+                                    ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($suscriptor['nombre_usuario']); ?></td>
+                                        <td><?php echo htmlspecialchars($suscriptor['email_usuario']); ?></td>
+                                        <td><?php echo htmlspecialchars($suscriptor['telefono_usuario'] ?? 'No proporcionado'); ?></td>
+                                        <td><?php echo date('d/m/Y H:i', strtotime($suscriptor['fecha_registro_opinion'])); ?></td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -208,10 +406,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form action="../../../controllers/balneario/boletines/enviar.php" method="POST">
+                    <form action="../../../controllers/balneario/boletines/enviar.php" method="POST" id="formEnviarBoletin">
                         <input type="hidden" name="id_boletin" id="id_boletin_enviar">
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn btn-success" id="btnEnviarBoletin">
                             <i class="bi bi-send me-2"></i>Enviar Boletín
+                            <span class="spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
                         </button>
                     </form>
                 </div>
@@ -258,20 +457,76 @@
 
     <script>
         $(document).ready(function() {
-            // Inicializar DataTables
-            $('#tablaBorradores, #tablaEnviados').DataTable({
+            // Configuración común para todas las tablas
+            const dataTableConfig = {
                 responsive: true,
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                }
+                },
+                pageLength: 10,
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                columnDefs: [
+                    { className: "align-middle", targets: "_all" }
+                ]
+            };
+
+            // Inicializar tabla de Borradores
+            $('#tablaBorradores').DataTable({
+                ...dataTableConfig,
+                order: [[0, 'asc']]
             });
 
-            // Configurar toastr
-            toastr.options = {
-                "closeButton": true,
-                "progressBar": true,
-                "timeOut": "3000"
-            };
+            // Inicializar tabla de Enviados
+            $('#tablaEnviados').DataTable({
+                ...dataTableConfig,
+                order: [[1, 'desc']] // Ordenar por fecha de envío
+            });
+
+            // Inicializar tabla de Suscriptores
+            $('#tablaSuscriptores').DataTable({
+                ...dataTableConfig,
+                order: [[3, 'desc']] // Ordenar por fecha de suscripción
+            });
+
+            // Inicializar tabla de Historial
+            $('#tablaHistorial').DataTable({
+                ...dataTableConfig,
+                order: [[1, 'desc']], // Ordenar por fecha de envío
+                columnDefs: [
+                    {
+                        targets: 1, // Columna de fecha
+                        type: 'date'
+                    }
+                ]
+            });
+
+            // Ajustar tablas cuando se cambia de pestaña
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+            });
+
+            // Manejar el envío del boletín
+            $('#formEnviarBoletin').on('submit', function(e) {
+                const btnEnviar = $('#btnEnviarBoletin');
+                const spinner = btnEnviar.find('.spinner-border');
+                const textoOriginal = btnEnviar.html();
+
+                // Deshabilitar el botón y mostrar spinner
+                btnEnviar.prop('disabled', true);
+                spinner.removeClass('d-none');
+                btnEnviar.html('<i class="bi bi-send me-2"></i>Enviando...');
+
+                // Restaurar el botón después de 3 segundos si hay error
+                setTimeout(function() {
+                    if (btnEnviar.prop('disabled')) {
+                        btnEnviar.prop('disabled', false);
+                        spinner.addClass('d-none');
+                        btnEnviar.html(textoOriginal);
+                    }
+                }, 3000);
+            });
         });
 
         function verBoletin(id) {

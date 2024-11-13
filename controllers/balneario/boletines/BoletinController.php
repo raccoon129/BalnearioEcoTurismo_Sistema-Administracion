@@ -1,4 +1,8 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 class BoletinController {
     private $conn;
 
@@ -76,24 +80,129 @@ class BoletinController {
     }
 
     /**
-     * Envía un boletín a los suscriptores
+     * Envía un boletín a los suscriptores y actualiza su estado
      * @param int $id_boletin ID del boletín a enviar
-     * @return bool|string True si se envió correctamente, mensaje de error en caso contrario
+     * @param int $id_balneario ID del balneario para verificar permisos
+     * @return array Resultado del envío con detalles
      */
-    public function enviarBoletin($id_boletin) {
-        // Aquí se implementará la lógica de envío usando Mailtrap
-        // Por ahora solo actualizamos la fecha de envío
-        $fecha_envio = date('Y-m-d H:i:s');
-        
-        $query = "UPDATE boletines SET fecha_envio_boletin = ? WHERE id_boletin = ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bind_param("si", $fecha_envio, $id_boletin);
-        
-        if ($stmt->execute()) {
-            return true;
+    public function enviarBoletin($id_boletin, $id_balneario) {
+        try {
+            // Obtener información del boletín
+            $boletin = $this->obtenerBoletin($id_boletin, $id_balneario);
+            if (!$boletin) {
+                throw new Exception('Boletín no encontrado');
+            }
+
+            // Configurar PHPMailer
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = 'sandbox.smtp.mailtrap.io';
+            $mail->SMTPAuth = true;
+            $mail->Port = 2525;
+            $mail->Username = '675e589bd51f45';
+            $mail->Password = '19a0228f814ddc';
+            $mail->CharSet = 'UTF-8';
+            $mail->setFrom('noreply@balnearios.com', 'Sistema de Boletines');
+
+            // Obtener suscriptores del balneario
+            $query = "SELECT DISTINCT email_usuario, nombre_usuario 
+                     FROM opiniones_usuarios 
+                     WHERE id_balneario = ? 
+                     AND suscripcion_boletin = 1 
+                     AND email_usuario IS NOT NULL";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("i", $id_balneario);
+            $stmt->execute();
+            $suscriptores = $stmt->get_result();
+
+            $enviados = 0;
+            $errores = [];
+
+            // Enviar a cada suscriptor
+            while ($suscriptor = $suscriptores->fetch_assoc()) {
+                try {
+                    $mail->clearAddresses();
+                    $mail->addAddress($suscriptor['email_usuario'], $suscriptor['nombre_usuario']);
+                    $mail->Subject = $boletin['titulo_boletin'];
+                    
+                    // Crear contenido HTML
+                    $contenidoHTML = $this->crearPlantillaEmail(
+                        $boletin['titulo_boletin'],
+                        $boletin['contenido_boletin'],
+                        $suscriptor['nombre_usuario']
+                    );
+                    
+                    $mail->isHTML(true);
+                    $mail->Body = $contenidoHTML;
+                    $mail->AltBody = strip_tags($boletin['contenido_boletin']);
+                    
+                    $mail->send();
+                    $enviados++;
+                } catch (Exception $e) {
+                    $errores[] = [
+                        'email' => $suscriptor['email_usuario'],
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            // Si se envió al menos a un suscriptor, actualizar la fecha de envío
+            if ($enviados > 0) {
+                $fecha_envio = date('Y-m-d H:i:s');
+                $query = "UPDATE boletines SET fecha_envio_boletin = ? WHERE id_boletin = ?";
+                $stmt = $this->conn->prepare($query);
+                $stmt->bind_param("si", $fecha_envio, $id_boletin);
+                $stmt->execute();
+            }
+
+            return [
+                'success' => $enviados > 0,
+                'enviados' => $enviados,
+                'total_suscriptores' => $suscriptores->num_rows,
+                'errores' => $errores
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'enviados' => 0,
+                'errores' => [$e->getMessage()]
+            ];
         }
-        
-        return "Error al enviar el boletín: " . $stmt->error;
+    }
+
+    private function crearPlantillaEmail($titulo, $contenido, $nombreSuscriptor) {
+        return '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
+                .content { padding: 20px; background-color: #f9f9f9; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>' . htmlspecialchars($titulo) . '</h1>
+                </div>
+                <div class="content">
+                    <p>Hola ' . htmlspecialchars($nombreSuscriptor) . ',</p>
+                    ' . nl2br(htmlspecialchars($contenido)) . '
+                </div>
+                <div class="footer">
+                    <p>Este correo fue enviado porque te suscribiste a nuestro boletín.</p>
+                    <p>Si no deseas recibir más correos, puedes cancelar tu suscripción en tu próxima visita.</p>
+                </div>
+            </div>
+        </body>
+        </html>';
     }
 
     /**
