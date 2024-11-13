@@ -111,7 +111,7 @@ if (isset($_SESSION['usuario_id'])) {
                         <div class="gif-container mb-4">
                             <img src="assets/img/1.gif" alt="Logo Animado" class="logo-gif">
                         </div>
-                        <h2 class="fw-bold">Sistema de Administración de Balnearios</h2>
+                        <h2 class="fw-bold">Sistema de Administración para Balnearios</h2>
                         <br>
                         <h3 class="fw-bold">Bienvenido</h3>
                         <p class="text-muted">Ingrese sus credenciales para continuar</p>
