@@ -22,12 +22,24 @@
     <div class="sidebar">
         <h4><strong>Panel administrativo para Balnearios</strong></h4>
         <br>
-        <a href="#" onclick="loadPage('views/dashboard/bienvenida_balneario.php', this)" id="inicioLink"><i class="fas fa-home"></i> Inicio</a>
-        <a href="#" onclick="loadPage('views/balneario/mi_balneario/detalles.php', this)"><i class="fas fa-user"></i> Mi Balneario</a>
-        <a href="#" onclick="loadPage('views/balneario/eventos/lista.php', this)"><i class="fas fa-calendar-alt"></i> Eventos</a>
-        <a href="#" onclick="loadPage('views/balneario/promociones/lista.php', this)"><i class="fas fa-tags"></i> Promociones</a>
-        <a href="#" onclick="loadPage('views/balneario/opiniones/lista.php', this)"><i class="fas fa-comments"></i> Opiniones</a>
-        <a href="#" onclick="loadPage('views/balneario/boletines/lista.php', this)"><i class="fas fa-envelope"></i> Boletines</a>
+        <a href="#inicio" data-page="views/dashboard/bienvenida_balneario.php" id="inicioLink">
+            <i class="fas fa-home"></i> Inicio
+        </a>
+        <a href="#mi-balneario" data-page="views/balneario/mi_balneario/ver.php">
+            <i class="fas fa-user"></i> Mi Balneario
+        </a>
+        <a href="#eventos" data-page="views/balneario/eventos/lista.php">
+            <i class="fas fa-calendar-alt"></i> Eventos
+        </a>
+        <a href="#promociones" data-page="views/balneario/promociones/lista.php">
+            <i class="fas fa-tags"></i> Promociones
+        </a>
+        <a href="#opiniones" data-page="views/balneario/opiniones/lista.php">
+            <i class="fas fa-comments"></i> Opiniones
+        </a>
+        <a href="#boletines" data-page="views/balneario/boletines/lista.php">
+            <i class="fas fa-envelope"></i> Boletines
+        </a>
     </div>
 
     <div class="content" style="background-color: #f8f9fa;">
@@ -36,28 +48,70 @@
     </div>
 
     <script>
+        // Mapeo de hashes a páginas
+        const hashMap = {
+            '#inicio': 'views/dashboard/bienvenida_balneario.php',
+            '#mi-balneario': 'views/balneario/mi_balneario/ver.php',
+            '#eventos': 'views/balneario/eventos/lista.php',
+            '#promociones': 'views/balneario/promociones/lista.php',
+            '#opiniones': 'views/balneario/opiniones/lista.php',
+            '#boletines': 'views/balneario/boletines/lista.php'
+        };
+
         function loadPage(page, element) {
             document.getElementById('loader').style.display = 'block';
             document.querySelector('.content').classList.add('content-blur');
 
+            // Remover clase active de todos los enlaces
             const links = document.querySelectorAll('.sidebar a');
             links.forEach(link => {
                 link.classList.remove('active');
             });
 
+            // Añadir clase active al enlace seleccionado
             element.classList.add('active');
 
+            // Cargar la página en el iframe
             document.getElementById('contentFrame').src = page;
 
             document.getElementById('contentFrame').onload = function() {
                 document.getElementById('loader').style.display = 'none';
+                document.querySelector('.content').classList.remove('content-blur');
             };
         }
 
+        // Manejar clics en los enlaces
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const page = this.getAttribute('data-page');
+                loadPage(page, this);
+            });
+        });
+
+        // Función para cargar página basada en hash
+        function loadPageFromHash() {
+            const hash = window.location.hash || '#inicio';
+            const page = hashMap[hash];
+            if (page) {
+                const link = document.querySelector(`a[href="${hash}"]`);
+                if (link) {
+                    loadPage(page, link);
+                }
+            }
+        }
+
+        // Escuchar cambios en el hash
+        window.addEventListener('hashchange', loadPageFromHash);
+
+        // Cargar página inicial
         window.onload = function() {
-            const inicioLink = document.getElementById('inicioLink');
-            loadPage('views/dashboard/bienvenida_balneario.php', inicioLink);
+            loadPageFromHash();
         };
+
+        // Si no hay hash, establecer el hash inicial
+        if (!window.location.hash) {
+            window.location.hash = '#inicio';
+        }
     </script>
 </body>
 </html>
