@@ -8,11 +8,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/estilo_dashboard.css">
     <link rel="stylesheet" href="css/loader.css">
+    <style>
+        .navbar-logo {
+            height: 24px; /* Altura pequeña fija */
+            width: auto;
+            margin-right: 15px; /* Margen a la derecha del logo */
+            object-fit: contain; /* Mantiene la proporción */
+        }
+
+        .navbar {
+            padding: 0.5rem 1rem; /* Mantener el padding original del navbar */
+        }
+
+        .container-fluid {
+            padding: 0 15px; /* Padding consistente */
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow">
         <div class="container-fluid">
-            <span class="navbar-brand">Sistema de Administración para Balnearios Eco Turismo</span>
+            <div class="d-flex align-items-center">
+                <img src="assets/img/0.png" alt="Logo" class="navbar-logo">
+                <span class="navbar-brand">Sistema de Administración para Balnearios Eco Turismo</span>
+            </div>
             <button class="btn btn-danger logout-btn" type="button" onclick="window.location.href='logout.php'">
                 <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
             </button>
@@ -26,7 +45,7 @@
             <i class="fas fa-home"></i> Inicio
         </a>
         <a href="#mi-balneario" data-page="views/balneario/mi_balneario/ver.php">
-            <i class="fas fa-user"></i> Mi Balneario
+            <i class="fas fa-water"></i> Mi Balneario
         </a>
         <a href="#eventos" data-page="views/balneario/eventos/lista.php">
             <i class="fas fa-calendar-alt"></i> Eventos
@@ -44,8 +63,10 @@
 
     <div class="content" style="background-color: #f8f9fa;">
         <div class="loader" id="loader" style="display: none;"></div>
-        <iframe id="contentFrame" src="" style="width: 100%; height: calc(100vh - 56px); border: none; margin-top: 56px;"></iframe>
+        <iframe id="contentFrame" src="" style="width: 100%; height: calc(100vh - 96px); border: none; margin-top: 56px;"></iframe>
     </div>
+
+    <?php include 'components/footer.php'; ?>
 
     <script>
         // Mapeo de hashes a páginas
