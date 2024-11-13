@@ -76,6 +76,24 @@
             font-weight: bold;
             color: #495057;
         }
+
+        /* Añadir estos estilos */
+        .dataTables_wrapper {
+            width: 100%;
+        }
+
+        .dataTables_wrapper .row {
+            width: 100%;
+            margin: 0;
+        }
+
+        table.dataTable {
+            width: 100% !important;
+        }
+
+        .table-responsive {
+            padding: 0;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -522,7 +540,7 @@
                         
                         <!-- Tabla de usuarios -->
                         <div class="table-responsive">
-                            <table class="table table-hover" id="tablaUsuarios">
+                            <table class="table table-hover w-100" id="tablaUsuarios">
                                 <thead>
                                     <tr>
                                         <th>Nombre</th>
@@ -552,9 +570,9 @@
                                         <td>
                                             <span class="badge bg-primary">
                                                 <?php 
-                                                echo $usuario['rol_usuario'] === 'administrador_balneario' 
-                                                    ? 'Administrador' 
-                                                    : 'Usuario'; 
+                                                echo (isset($usuario['rol_usuario']) && $usuario['rol_usuario'] === 'administrador_balneario')
+                                                    ? 'Administrador de balneario' 
+                                                    : 'SuperAdministrador'; 
                                                 ?>
                                             </span>
                                         </td>
@@ -599,13 +617,15 @@
             },
             order: [[3, 'desc']], // Ordenar por fecha de registro
             responsive: true,
-            columns: [
-                { width: '25%' }, // Nombre
-                { width: '30%' }, // Email
-                { width: '15%' }, // Rol
-                { width: '20%' }, // Fecha
-                { width: '10%' }  // Estado
-            ]
+            autoWidth: false,
+            columnDefs: [
+                { targets: 0, width: '25%' }, // Nombre
+                { targets: 1, width: '30%' }, // Email
+                { targets: 2, width: '15%' }, // Rol
+                { targets: 3, width: '20%' }, // Fecha
+                { targets: 4, width: '10%' }  // Estado
+            ],
+            scrollX: true
         });
 
         // Activar tooltips de Bootstrap

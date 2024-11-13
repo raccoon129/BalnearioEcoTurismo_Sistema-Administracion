@@ -181,18 +181,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Botones de acción -->
-            <div class="row mt-4">
-                <div class="col-12 text-end">
-                    <a href="lista.php" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-arrow-left me-2"></i>Volver
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-2"></i>Guardar Cambios
-                    </button>
-                </div>
-            </div>
         </form>
     </div>
 
@@ -227,34 +215,41 @@
         // Manejar envío del formulario
         $('#formEditarUsuario').on('submit', function(e) {
             e.preventDefault();
+            console.log('Formulario enviado');
 
-            // Obtener referencia al botón de submit
-            const btnSubmit = $(this).find('button[type="submit"]');
+            const btnSubmit = $('button[type="submit"]');
+            btnSubmit.prop('disabled', true)
+                    .html('<i class="bi bi-hourglass-split me-2"></i>Guardando...');
+
+            // Preparar datos del formulario
+            const formData = new FormData(this);
+            const rol = formData.get('rol_usuario');
             
-            // Evitar doble clic deshabilitando inmediatamente
-            btnSubmit.prop('disabled', true);
-            
+            // Si es superadministrador, asegurarse de que id_balneario sea null
+            if (rol === 'superadministrador') {
+                formData.set('id_balneario', '');
+            }
+
             // Validar email
-            const email = $('input[name="email_usuario"]').val();
+            const email = formData.get('email_usuario');
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 toastr.error('Por favor ingrese un email válido');
-                btnSubmit.prop('disabled', false);
+                btnSubmit.prop('disabled', false)
+                        .html('<i class="bi bi-save me-2"></i>Guardar Cambios');
                 return false;
             }
 
-            // Validar selección de balneario para administradores
-            if ($('select[name="rol_usuario"]').val() === 'administrador_balneario' && 
-                !$('select[name="id_balneario"]').val()) {
+            // Validar rol y balneario
+            if (rol === 'administrador_balneario' && !formData.get('id_balneario')) {
                 toastr.error('Debe seleccionar un balneario para el administrador');
-                btnSubmit.prop('disabled', false);
+                btnSubmit.prop('disabled', false)
+                        .html('<i class="bi bi-save me-2"></i>Guardar Cambios');
                 return false;
             }
 
-            // Cambiar apariencia del botón mientras se procesa
-            const btnText = btnSubmit.html();
-            btnSubmit.html('<i class="bi bi-hourglass-split me-2 icono-guardando"></i>Guardando...');
+            // Log para debugging
+            //console.log('Datos a enviar:', $(this).serialize());
 
-            // Realizar petición AJAX
             $.ajax({
                 url: $(this).attr('action'),
                 method: 'POST',
@@ -262,18 +257,22 @@
                 dataType: 'json'
             })
             .done(function(response) {
+                console.log('Respuesta:', response);
                 if (response.success) {
                     toastr.success(response.message);
                     setTimeout(() => window.location.href = 'lista.php', 1500);
                 } else {
-                    toastr.error(response.message);
-                    btnSubmit.prop('disabled', false).html(btnText);
+                    toastr.error(response.message || 'Error al actualizar el usuario');
+                    btnSubmit.prop('disabled', false)
+                           .html('<i class="bi bi-save me-2"></i>Guardar Cambios');
                 }
             })
             .fail(function(xhr) {
+                console.error('Error:', xhr.responseJSON);
                 const response = xhr.responseJSON || {};
                 toastr.error(response.message || 'Error al procesar la solicitud');
-                btnSubmit.prop('disabled', false).html(btnText);
+                btnSubmit.prop('disabled', false)
+                       .html('<i class="bi bi-save me-2"></i>Guardar Cambios');
             });
         });
     });

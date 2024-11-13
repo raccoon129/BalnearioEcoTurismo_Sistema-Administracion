@@ -44,7 +44,7 @@
         <a href="#inicio" data-page="views/dashboard/bienvenida_super.php" id="inicioLink">
             <i class="fas fa-home"></i> Inicio
         </a>
-        <a href="#mi-balneario" data-page="views/super/balnearios/lista.php">
+        <a href="#balneario" data-page="views/super/balnearios/lista.php">
             <i class="fas fa-water"></i> Balnearios
         </a>
         <a href="#eventos" data-page="views/super/usuarios/lista.php">
