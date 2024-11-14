@@ -30,7 +30,7 @@
         <div class="container-fluid">
             <div class="d-flex align-items-center">
                 <img src="assets/img/0.png" alt="Logo" class="navbar-logo">
-                <span class="navbar-brand">Sistema de Administración para Balnearios Eco Turismo</span>
+                <span class="navbar-brand">Sistema de Administración para Balnearios EcoTurismo</span>
             </div>
             <button class="btn btn-danger logout-btn" type="button" onclick="window.location.href='logout.php'">
                 <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
@@ -47,8 +47,11 @@
         <a href="#balneario" data-page="views/super/balnearios/lista.php">
             <i class="fas fa-water"></i> Balnearios
         </a>
-        <a href="#eventos" data-page="views/super/usuarios/lista.php">
+        <a href="#usuarios" data-page="views/super/usuarios/lista.php">
             <i class="fas fa-user-alt"></i> Usuarios
+        </a>
+        <a href="#eventos" data-page="views/super/eventos/lista.php">
+            <i class="fas fa-calendar-alt"></i> Eventos
         </a>
         <a href="#promociones" data-page="views/super/promociones/lista.php">
             <i class="fas fa-tags"></i> Promociones
@@ -77,6 +80,7 @@
             '#inicio': 'views/dashboard/bienvenida_super.php',
             '#balnearios': 'views/super/balnearios/lista.php',
             '#usuarios': 'views/super/usuarios/lista.php',
+            '#eventos': 'views/super/eventos/lista.php',
             '#promociones': 'views/super/promociones/lista.php',
             '#opiniones': 'views/super/opiniones/lista.php',
             '#boletines': 'views/super/boletines/lista.php',
