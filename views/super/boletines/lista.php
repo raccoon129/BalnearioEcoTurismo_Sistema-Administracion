@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Boletines</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
     <style>
@@ -19,6 +18,9 @@
             color: #0d6efd;
             border-bottom: 3px solid #0d6efd;
             background: none;
+        }
+        .nav-tabs .nav-link:hover:not(.active) {
+            border-bottom: 3px solid #e9ecef;
         }
         .boletin-card {
             transition: all 0.3s ease;
@@ -74,6 +76,11 @@
                     <i class="bi bi-water me-2"></i>Boletines de Balnearios
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" id="destinatarios-tab" data-bs-toggle="tab" href="#destinatarios">
+                    <i class="bi bi-people me-2"></i>Ver Destinatarios
+                </a>
+            </li>
         </ul>
 
         <!-- Contenido de las pestañas -->
@@ -87,10 +94,15 @@
             <div class="tab-pane fade" id="balnearios">
                 <?php include 'components/lista_boletines_balneario.php'; ?>
             </div>
+
+            <!-- Pestaña de Destinatarios -->
+            <div class="tab-pane fade" id="destinatarios">
+                <?php include 'components/lista_destinatarios.php'; ?>
+            </div>
         </div>
     </div>
 
-    <!-- Modal para Nuevo/Editar Boletín -->
+    <!-- Modal para Nuevo Boletín -->
     <?php include 'components/modal_boletin.php'; ?>
 
     <!-- Scripts -->

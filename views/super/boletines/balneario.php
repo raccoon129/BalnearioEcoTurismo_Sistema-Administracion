@@ -53,8 +53,10 @@
     }
 
     // Obtener estadísticas y boletines del balneario
-    $estadisticas = $boletinController->obtenerEstadisticasBalneario($id_balneario);
-    $boletines = $boletinController->obtenerTodosBoletinesBalnearios(['id_balneario' => $id_balneario]);
+    $estadisticas = $boletinController->obtenerEstadisticasBoletinesBalneario($id_balneario);
+    $boletines = $boletinController->obtenerBoletinesDeBalneario($id_balneario, [
+        'estado' => $_GET['estado'] ?? null
+    ]);
     ?>
 
     <div class="container py-4">
@@ -171,15 +173,15 @@
                         <div class="d-flex justify-content-end gap-2">
                             <?php if ($boletin['estado_boletin'] === 'borrador'): ?>
                                 <button type="button" class="btn btn-sm btn-success" 
-                                        onclick="enviarBoletin(<?php echo $boletin['id_boletin']; ?>)">
+                                        onclick="enviarBoletinBalneario(<?php echo $boletin['id_boletin']; ?>)">
                                     <i class="bi bi-send me-1"></i>Enviar
                                 </button>
-                                <a href="detalles.php?id=<?php echo $boletin['id_boletin']; ?>" 
+                                <a href="editar_boletin_balneario.php?id=<?php echo $boletin['id_boletin']; ?>" 
                                    class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil me-1"></i>Editar
                                 </a>
                             <?php else: ?>
-                                <a href="detalles.php?id=<?php echo $boletin['id_boletin']; ?>" 
+                                <a href="detalles_boletin_balneario.php?id=<?php echo $boletin['id_boletin']; ?>" 
                                    class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye me-1"></i>Ver Detalles
                                 </a>

@@ -52,7 +52,7 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
     <?php endforeach; ?>
 </div>
 
-<!-- Filtros -->
+<!-- Filtros 
 <div class="card mb-4">
     <div class="card-body">
         <form id="filtrosBoletinesBalnearios" class="row g-3">
@@ -87,7 +87,7 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
         </form>
     </div>
 </div>
-
+-->
 <!-- Lista de boletines -->
 <div class="row g-4">
     <?php if (!empty($boletines)): ?>
@@ -132,12 +132,12 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
                                     onclick="enviarBoletinBalneario(<?php echo $boletin['id_boletin']; ?>)">
                                 <i class="bi bi-send me-1"></i>Enviar
                             </button>
-                            <a href="detalles.php?id=<?php echo $boletin['id_boletin']; ?>" 
+                            <a href="editar_boletin_balneario.php?id=<?php echo $boletin['id_boletin']; ?>" 
                                class="btn btn-sm btn-primary">
                                 <i class="bi bi-pencil me-1"></i>Editar
                             </a>
                         <?php else: ?>
-                            <a href="detalles.php?id=<?php echo $boletin['id_boletin']; ?>" 
+                            <a href="detalles_boletin_balneario.php?id=<?php echo $boletin['id_boletin']; ?>" 
                                class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye me-1"></i>Ver Detalles
                             </a>
@@ -148,12 +148,14 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
         </div>
         <?php endforeach; ?>
     <?php else: ?>
+        <!-- No se encontraron boletines 
         <div class="col-12">
             <div class="text-center text-muted py-5">
                 <i class="bi bi-envelope-x display-1"></i>
                 <p class="mt-3">No se encontraron boletines<?php echo $filtros['id_balneario'] ? ' para este balneario' : ''; ?></p>
             </div>
         </div>
+        -->
     <?php endif; ?>
 </div>
 

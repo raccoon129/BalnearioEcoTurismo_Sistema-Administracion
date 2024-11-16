@@ -1,7 +1,7 @@
 <?php
 // Obtener estadísticas y boletines del sistema
 $estadisticas = $boletinController->obtenerEstadisticas();
-$boletines = $boletinController->obtenerBoletinesSistema();
+$boletines = $boletinController->obtenerBoletinesSuperAdmin();
 ?>
 
 <!-- Estadísticas -->
@@ -91,10 +91,6 @@ $boletines = $boletinController->obtenerBoletinesSistema();
                         <i class="bi bi-person me-2"></i>
                         Creado por: <?php echo htmlspecialchars($boletin['nombre_usuario']); ?>
                     </small>
-                    <small class="text-muted d-block">
-                        <i class="bi bi-calendar2 me-2"></i>
-                        <?php echo date('d/m/Y H:i', strtotime($boletin['fecha_envio_boletin'] ?? $boletin['fecha_envio_boletin'])); ?>
-                    </small>
                 </div>
 
                 <p class="card-text">
@@ -103,14 +99,14 @@ $boletines = $boletinController->obtenerBoletinesSistema();
 
                 <div class="d-flex justify-content-end gap-2">
                     <?php if ($boletin['estado_boletin'] === 'borrador'): ?>
-                        <button type="button" class="btn btn-sm btn-success" 
-                                onclick="enviarBoletin(<?php echo $boletin['id_boletin']; ?>)">
-                            <i class="bi bi-send me-1"></i>Enviar
-                        </button>
-                        <a href="detalles.php?id=<?php echo $boletin['id_boletin']; ?>" 
+                        <a href="editar_boletin_superadministrador.php?id=<?php echo $boletin['id_boletin']; ?>" 
                            class="btn btn-sm btn-primary">
                             <i class="bi bi-pencil me-1"></i>Editar
                         </a>
+                        <button type="button" class="btn btn-sm btn-success" 
+                                onclick="mostrarModalEnvio(<?php echo $boletin['id_boletin']; ?>)">
+                            <i class="bi bi-send me-1"></i>Enviar
+                        </button>
                     <?php else: ?>
                         <a href="detalles.php?id=<?php echo $boletin['id_boletin']; ?>" 
                            class="btn btn-sm btn-outline-primary">
@@ -131,4 +127,7 @@ $boletines = $boletinController->obtenerBoletinesSistema();
         </div>
     </div>
     <?php endif; ?>
-</div> 
+</div>
+
+<!-- Modal de confirmación de envío -->
+<?php include 'modal_envio_boletin_superadministrador.php'; ?> 
