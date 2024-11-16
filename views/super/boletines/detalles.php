@@ -39,7 +39,8 @@
 
     $id_boletin = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     $boletinController = new BoletinSuperController($db, $auth->getUsuarioId());
-    $boletin = $boletinController->obtenerBoletin($id_boletin);
+
+    $boletin = $boletinController->obtenerDetallesBoletinSuperAdmin($id_boletin);
 
     if (!$boletin) {
         header('Location: lista.php');
@@ -52,12 +53,6 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2>Detalles del Boletín</h2>
-                <?php if ($boletin['id_balneario']): ?>
-                    <p class="text-muted mb-0">
-                        <i class="bi bi-water me-2"></i>
-                        <?php echo htmlspecialchars($boletin['nombre_balneario']); ?>
-                    </p>
-                <?php endif; ?>
             </div>
             <div class="d-flex gap-2">
                 <?php if ($boletin['estado_boletin'] === 'borrador'): ?>
