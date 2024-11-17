@@ -1,7 +1,7 @@
 <?php
 require_once '../../../config/database.php';
 require_once '../../../config/auth.php';
-require_once '../../../config/mail.php';
+require_once '../../../globalControllers/EmailController.php';
 require_once './BoletinSuperController.php';
 
 header('Content-Type: application/json');
@@ -21,7 +21,7 @@ try {
     }
 
     $boletinController = new BoletinSuperController($db, $auth->getUsuarioId());
-    $mailConfig = new MailConfig($db);
+    $emailController = new EmailController($db);
 
     // Obtener información del boletín
     $boletin = $boletinController->obtenerBoletin($_POST['id_boletin']);
@@ -42,11 +42,12 @@ try {
         throw new Exception('No se encontraron destinatarios para el envío');
     }
 
-    // Enviar el boletín
-    $resultado = $mailConfig->enviarBoletin(
-        $boletin['id_balneario'],
+    // Enviar el boletín usando el nuevo EmailController
+    $resultado = $emailController->enviarBoletinMasivo(
         $boletin['titulo_boletin'],
-        $boletin['contenido_boletin']
+        $boletin['contenido_boletin'],
+        $destinatarios,
+        $boletin['id_balneario']
     );
 
     if ($resultado['success']) {

@@ -1,7 +1,6 @@
 <?php
 // Obtener balnearios y sus estadísticas
 $balnearios = $boletinController->obtenerBalnearios();
-$estadisticasBalnearios = $boletinController->obtenerEstadisticasBalneario();
 
 // Obtener filtros
 $filtros = [
@@ -11,6 +10,29 @@ $filtros = [
 
 // Obtener boletines según filtros
 $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
+
+// Calcular estadísticas por balneario
+$estadisticasBalnearios = [];
+foreach ($boletines as $boletin) {
+    $id_balneario = $boletin['id_balneario'];
+    
+    if (!isset($estadisticasBalnearios[$id_balneario])) {
+        $estadisticasBalnearios[$id_balneario] = [
+            'id_balneario' => $id_balneario,
+            'nombre_balneario' => $boletin['nombre_balneario'],
+            'total_boletines' => 0,
+            'borradores' => 0,
+            'enviados' => 0
+        ];
+    }
+    
+    $estadisticasBalnearios[$id_balneario]['total_boletines']++;
+    if ($boletin['fecha_envio_boletin'] === null) {
+        $estadisticasBalnearios[$id_balneario]['borradores']++;
+    } else {
+        $estadisticasBalnearios[$id_balneario]['enviados']++;
+    }
+}
 ?>
 
 <!-- Vista general de balnearios -->
@@ -25,10 +47,11 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
                 </h5>
                 
                 <?php
-                $estadisticas = array_filter($estadisticasBalnearios, function($est) use ($balneario) {
-                    return $est['id_balneario'] == $balneario['id_balneario'];
-                });
-                $estadisticas = reset($estadisticas) ?: ['borradores' => 0, 'enviados' => 0];
+                $estadisticas = $estadisticasBalnearios[$balneario['id_balneario']] ?? [
+                    'borradores' => 0,
+                    'enviados' => 0,
+                    'total_boletines' => 0
+                ];
                 ?>
                 
                 <div class="mt-3">
@@ -39,6 +62,10 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
                     <div class="d-flex justify-content-between mb-3">
                         <span class="text-muted">Enviados:</span>
                         <span class="badge bg-success"><?php echo $estadisticas['enviados']; ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Total:</span>
+                        <span class="badge bg-primary"><?php echo $estadisticas['total_boletines']; ?></span>
                     </div>
                 </div>
 
@@ -52,42 +79,6 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
     <?php endforeach; ?>
 </div>
 
-<!-- Filtros 
-<div class="card mb-4">
-    <div class="card-body">
-        <form id="filtrosBoletinesBalnearios" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Balneario</label>
-                <select class="form-select" name="balneario">
-                    <option value="">Todos los balnearios</option>
-                    <?php foreach ($balnearios as $balneario): ?>
-                    <option value="<?php echo $balneario['id_balneario']; ?>"
-                            <?php echo $filtros['id_balneario'] == $balneario['id_balneario'] ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($balneario['nombre_balneario']); ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Estado</label>
-                <select class="form-select" name="estado">
-                    <option value="">Todos los estados</option>
-                    <option value="borrador" <?php echo $filtros['estado'] === 'borrador' ? 'selected' : ''; ?>>Borradores</option>
-                    <option value="enviado" <?php echo $filtros['estado'] === 'enviado' ? 'selected' : ''; ?>>Enviados</option>
-                </select>
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">
-                    <i class="bi bi-search me-2"></i>Filtrar
-                </button>
-                <button type="button" class="btn btn-outline-secondary" onclick="limpiarFiltros()">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
--->
 <!-- Lista de boletines -->
 <div class="row g-4">
     <?php if (!empty($boletines)): ?>
@@ -97,8 +88,8 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <h5 class="card-title"><?php echo htmlspecialchars($boletin['titulo_boletin']); ?></h5>
-                        <span class="badge estado-<?php echo $boletin['estado_boletin']; ?> estado-badge">
-                            <?php if ($boletin['estado_boletin'] === 'borrador'): ?>
+                        <span class="badge estado-<?php echo $boletin['fecha_envio_boletin'] === null ? 'borrador' : 'enviado'; ?> estado-badge">
+                            <?php if ($boletin['fecha_envio_boletin'] === null): ?>
                                 <i class="bi bi-file-earmark me-1"></i>Borrador
                             <?php else: ?>
                                 <i class="bi bi-send me-1"></i>Enviado
@@ -118,7 +109,10 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
                         </small>
                         <small class="text-muted d-block">
                             <i class="bi bi-calendar2 me-2"></i>
-                            <?php echo date('d/m/Y H:i', strtotime($boletin['fecha_envio_boletin'] ?? $boletin['fecha_envio_boletin'])); ?>
+                            <?php 
+                            $fecha = $boletin['fecha_envio_boletin'] ?? $boletin['fecha_creacion'];
+                            echo date('d/m/Y H:i', strtotime($fecha)); 
+                            ?>
                         </small>
                     </div>
 
@@ -127,7 +121,7 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
                     </p>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <?php if ($boletin['estado_boletin'] === 'borrador'): ?>
+                        <?php if ($boletin['fecha_envio_boletin'] === null): ?>
                             <button type="button" class="btn btn-sm btn-success" 
                                     onclick="enviarBoletinBalneario(<?php echo $boletin['id_boletin']; ?>)">
                                 <i class="bi bi-send me-1"></i>Enviar
@@ -148,14 +142,12 @@ $boletines = $boletinController->obtenerTodosBoletinesBalnearios($filtros);
         </div>
         <?php endforeach; ?>
     <?php else: ?>
-        <!-- No se encontraron boletines 
         <div class="col-12">
             <div class="text-center text-muted py-5">
                 <i class="bi bi-envelope-x display-1"></i>
                 <p class="mt-3">No se encontraron boletines<?php echo $filtros['id_balneario'] ? ' para este balneario' : ''; ?></p>
             </div>
         </div>
-        -->
     <?php endif; ?>
 </div>
 

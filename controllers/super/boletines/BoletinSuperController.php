@@ -846,7 +846,6 @@ class BoletinSuperController {
 
     /**
      * Obtiene los correos de todos los superadministradores
-     * @return array Lista de correos y nombres de superadministradores
      */
     public function obtenerCorreosSuperAdmin() {
         try {
@@ -856,10 +855,6 @@ class BoletinSuperController {
                      AND email_usuario IS NOT NULL";
             
             $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta");
-            }
-
             if (!$stmt->execute()) {
                 throw new Exception("Error al ejecutar la consulta");
             }
@@ -875,34 +870,15 @@ class BoletinSuperController {
 
     /**
      * Obtiene los correos de administradores de balnearios
-     * @param int|null $id_balneario ID del balneario específico (opcional)
-     * @return array Lista de correos y nombres de administradores
      */
-    public function obtenerCorreosAdminBalnearios($id_balneario = null) {
+    public function obtenerCorreosAdminBalnearios() {
         try {
             $query = "SELECT DISTINCT email_usuario, nombre_usuario 
                      FROM usuarios 
                      WHERE rol_usuario = 'administrador_balneario'
                      AND email_usuario IS NOT NULL";
 
-            $params = [];
-            $types = "";
-
-            if ($id_balneario) {
-                $query .= " AND id_balneario = ?";
-                $params[] = $id_balneario;
-                $types .= "i";
-            }
-
             $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta");
-            }
-
-            if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
-            }
-
             if (!$stmt->execute()) {
                 throw new Exception("Error al ejecutar la consulta");
             }
@@ -918,34 +894,15 @@ class BoletinSuperController {
 
     /**
      * Obtiene los correos de usuarios suscritos al boletín
-     * @param int|null $id_balneario ID del balneario específico (opcional)
-     * @return array Lista de correos y nombres de suscriptores
      */
-    public function obtenerCorreosSuscriptores($id_balneario = null) {
+    public function obtenerCorreosSuscriptores() {
         try {
             $query = "SELECT DISTINCT email_usuario, nombre_usuario 
                      FROM opiniones_usuarios 
                      WHERE suscripcion_boletin = 1 
                      AND email_usuario IS NOT NULL";
 
-            $params = [];
-            $types = "";
-
-            if ($id_balneario) {
-                $query .= " AND id_balneario = ?";
-                $params[] = $id_balneario;
-                $types .= "i";
-            }
-
             $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta");
-            }
-
-            if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
-            }
-
             if (!$stmt->execute()) {
                 throw new Exception("Error al ejecutar la consulta");
             }

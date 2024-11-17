@@ -70,9 +70,7 @@
                 <p class="text-muted mb-0">Gestión de Boletines</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalBoletin">
-                    <i class="bi bi-plus-lg me-2"></i>Nuevo Boletín
-                </button>
+
                 <a href="lista.php" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-2"></i>Volver
                 </a>
@@ -172,10 +170,7 @@
 
                         <div class="d-flex justify-content-end gap-2">
                             <?php if ($boletin['estado_boletin'] === 'borrador'): ?>
-                                <button type="button" class="btn btn-sm btn-success" 
-                                        onclick="enviarBoletinBalneario(<?php echo $boletin['id_boletin']; ?>)">
-                                    <i class="bi bi-send me-1"></i>Enviar
-                                </button>
+
                                 <a href="editar_boletin_balneario.php?id=<?php echo $boletin['id_boletin']; ?>" 
                                    class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil me-1"></i>Editar

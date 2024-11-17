@@ -7,7 +7,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="formEnvioBoletin" action="../../../controllers/super/boletines/enviar.php" method="POST">
+                <form id="formEnvioBoletin">
                     <input type="hidden" name="id_boletin" id="id_boletin_envio">
 
                     <!-- Vista previa del boletín -->
@@ -58,32 +58,10 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formEnvioBoletin" class="btn btn-success">
+                <button type="button" id="btnConfirmarEnvio" class="btn btn-success">
                     <i class="bi bi-send me-2"></i>Confirmar Envío
                 </button>
             </div>
         </div>
     </div>
-</div>
-
-<script>
-function mostrarModalEnvio(idBoletin) {
-    $.get('../../../controllers/super/boletines/obtener.php', {
-        id_boletin: idBoletin
-    })
-    .done(function(response) {
-        if (response.success) {
-            const boletin = response.data;
-            $('#id_boletin_envio').val(idBoletin);
-            $('#previewTitulo').text(boletin.titulo_boletin);
-            $('#previewContenido').html(boletin.contenido_boletin.replace(/\n/g, '<br>'));
-            $('#modalEnvioBoletin').modal('show');
-        } else {
-            toastr.error('Error al cargar el boletín');
-        }
-    })
-    .fail(function() {
-        toastr.error('Error al cargar el boletín');
-    });
-}
-</script> 
+</div> 

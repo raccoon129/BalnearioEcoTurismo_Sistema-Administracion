@@ -62,9 +62,6 @@
         <a href="#boletines" data-page="views/super/boletines/lista.php">
             <i class="fas fa-envelope"></i> Boletines
         </a>
-        <a href="#configuraciones" data-page="views/super/configuraciones/lista.php">
-            <i class="fas fa-cog"></i> Configuraciones
-        </a>
     </div>
 
     <div class="content" style="background-color: #f8f9fa;">

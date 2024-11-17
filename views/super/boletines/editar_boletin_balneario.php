@@ -61,8 +61,9 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-body">
-                        <form id="formEditarBoletin" action="../../../controllers/super/boletines/actualizar.php" method="POST">
+                        <form id="formEditarBoletin">
                             <input type="hidden" name="id_boletin" value="<?php echo $id_boletin; ?>">
+                            <input type="hidden" name="id_balneario" value="<?php echo $boletin['id_balneario']; ?>">
                             
                             <div class="mb-3">
                                 <label class="form-label">Título del Boletín</label>
@@ -78,11 +79,8 @@
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
-                                <button type="submit" name="accion" value="borrador" class="btn btn-secondary">
+                                <button type="button" id="btnGuardarBorrador" class="btn btn-secondary">
                                     <i class="bi bi-save me-2"></i>Guardar como Borrador
-                                </button>
-                                <button type="submit" name="accion" value="enviar" class="btn btn-primary">
-                                    <i class="bi bi-send me-2"></i>Enviar Boletín
                                 </button>
                             </div>
                         </form>
@@ -131,52 +129,60 @@
         // Inicializar vista previa
         actualizarVistaPrevia();
 
-        // Manejar checkbox de borrador
-        $('#checkBorrador').on('change', function() {
-            const destinatarios = $('input[name="destinatarios[]"]');
-            if (this.checked) {
-                destinatarios.prop('required', false);
-            } else {
-                destinatarios.prop('required', true);
+        // Manejar guardado como borrador
+        $('#btnGuardarBorrador').on('click', function() {
+            const $btn = $(this);
+            const formData = new FormData($('#formEditarBoletin')[0]);
+            formData.append('accion', 'borrador');
+
+            // Validar campos requeridos
+            if (!$('input[name="titulo_boletin"]').val().trim()) {
+                toastr.error('El título es requerido');
+                return;
             }
-        });
-
-        // Manejar envío del formulario
-        $('#formEditarBoletin').on('submit', function(e) {
-            e.preventDefault();
-
-            // Validar destinatarios si no es borrador
-            if (!$('#checkBorrador').prop('checked') && 
-                !$('input[name="destinatarios[]"]:checked').length) {
-                toastr.error('Debe seleccionar al menos un tipo de destinatario');
+            if (!$('textarea[name="contenido_boletin"]').val().trim()) {
+                toastr.error('El contenido es requerido');
                 return;
             }
 
-            const btnSubmit = $(this).find('button[type="submit"]');
-            const btnHtml = btnSubmit.html();
-            btnSubmit.prop('disabled', true)
-                    .html('<i class="bi bi-hourglass-split me-2"></i>Guardando...');
+            // Deshabilitar botón mientras se procesa
+            $btn.prop('disabled', true)
+                .html('<i class="bi bi-hourglass-split me-2"></i>Guardando...');
 
             $.ajax({
-                url: $(this).attr('action'),
+                url: '../../../controllers/super/boletines/actualizar.php',
                 method: 'POST',
-                data: $(this).serialize(),
-                dataType: 'json'
-            })
-            .done(function(response) {
-                if (response.success) {
-                    toastr.success(response.message);
-                    setTimeout(() => {
-                        window.location.href = 'balneario.php?id=<?php echo $boletin['id_balneario']; ?>';
-                    }, 1500);
-                } else {
-                    toastr.error(response.message);
-                    btnSubmit.prop('disabled', false).html(btnHtml);
+                data: {
+                    id_boletin: formData.get('id_boletin'),
+                    id_balneario: formData.get('id_balneario'),
+                    titulo_boletin: formData.get('titulo_boletin'),
+                    contenido_boletin: formData.get('contenido_boletin'),
+                    accion: 'borrador'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Boletín guardado como borrador');
+                        setTimeout(() => {
+                            window.location.href = 'balneario.php?id=' + formData.get('id_balneario');
+                        }, 1500);
+                    } else {
+                        toastr.error(response.message || 'Error al guardar el boletín');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error al guardar el boletín';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMessage = response.message || errorMessage;
+                    } catch (e) {
+                        console.error('Error parsing response:', xhr.responseText);
+                    }
+                    toastr.error(errorMessage);
+                },
+                complete: function() {
+                    $btn.prop('disabled', false)
+                        .html('<i class="bi bi-save me-2"></i>Guardar como Borrador');
                 }
-            })
-            .fail(function() {
-                toastr.error('Error al procesar la solicitud');
-                btnSubmit.prop('disabled', false).html(btnHtml);
             });
         });
     });
