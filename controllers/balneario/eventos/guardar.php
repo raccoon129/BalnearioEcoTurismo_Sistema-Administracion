@@ -1,83 +1,57 @@
 <?php
 require_once '../../../config/database.php';
 require_once '../../../config/auth.php';
-require_once '../../../controllers/balneario/eventos/EventoController.php';
+require_once './EventoController.php';
 
 session_start();
 
-// Verificar autenticación
-$database = new Database();
-$db = $database->getConnection();
-$auth = new Auth($db);
+try {
+    // Verificar autenticación
+    $database = new Database();
+    $db = $database->getConnection();
+    $auth = new Auth($db);
 
-$auth->checkAuth();
-$auth->checkRole(['administrador_balneario']);
+    $auth->checkAuth();
+    $auth->checkRole(['administrador_balneario']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $eventoController = new EventoController($db);
-    
-    // Procesar la imagen si se subió una
-    $url_imagen = null;
-    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
-        $imagen = $_FILES['imagen'];
-        $extension = strtolower(pathinfo($imagen['name'], PATHINFO_EXTENSION));
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $eventoController = new EventoController($db);
         
-        // Validar extensión
-        $extensiones_permitidas = ['jpg', 'jpeg', 'png'];
-        if (!in_array($extension, $extensiones_permitidas)) {
-            header('Location: ../../../views/balneario/eventos/lista.php?error=' . urlencode('Formato de imagen no permitido'));
-            exit();
+        // Preparar datos del evento
+        $datos = [
+            'id_balneario' => $_SESSION['id_balneario'],
+            'titulo' => $_POST['titulo'],
+            'descripcion' => $_POST['descripcion'],
+            'fecha_inicio' => $_POST['fecha_inicio'],
+            'fecha_fin' => $_POST['fecha_fin']
+        ];
+
+        // Validar fechas
+        if (strtotime($datos['fecha_fin']) < strtotime($datos['fecha_inicio'])) {
+            throw new Exception('La fecha de fin no puede ser anterior a la fecha de inicio');
         }
 
-        // Validar tamaño (2MB máximo)
-        if ($imagen['size'] > 2 * 1024 * 1024) {
-            header('Location: ../../../views/balneario/eventos/lista.php?error=' . urlencode('La imagen no debe superar 2MB'));
-            exit();
-        }
+        // Procesar imagen si se proporcionó una
+        $imagen = isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK ? $_FILES['imagen'] : null;
 
-        // Generar nombre único y mover archivo
-        $nombre_archivo = uniqid() . '.' . $extension;
-        $directorio_destino = '../../../uploads/eventos/';
-        
-        if (!is_dir($directorio_destino)) {
-            mkdir($directorio_destino, 0777, true);
-        }
+        // Crear el evento
+        $resultado = $eventoController->crearEvento($datos, $imagen);
 
-        if (move_uploaded_file($imagen['tmp_name'], $directorio_destino . $nombre_archivo)) {
-            $url_imagen = '../../../uploads/eventos/' . $nombre_archivo;
+        if ($resultado === true) {
+            echo json_encode([
+                'success' => true,
+                'message' => '¡El evento ha sido creado exitosamente!'
+            ]);
         } else {
-            header('Location: ../../../views/balneario/eventos/lista.php?error=' . urlencode('Error al subir la imagen'));
-            exit();
+            throw new Exception($resultado);
         }
     }
 
-    // Preparar datos del evento
-    $datos = [
-        'id_balneario' => $_SESSION['id_balneario'],
-        'titulo' => $_POST['titulo'],
-        'descripcion' => $_POST['descripcion'],
-        'fecha_inicio' => $_POST['fecha_inicio'],
-        'fecha_fin' => $_POST['fecha_fin'],
-        'url_imagen' => $url_imagen
-    ];
-
-    // Validar fechas
-    if (strtotime($datos['fecha_fin']) < strtotime($datos['fecha_inicio'])) {
-        header('Location: ../../../views/balneario/eventos/lista.php?error=' . urlencode('La fecha de fin no puede ser anterior a la fecha de inicio'));
-        exit();
-    }
-
-    // Intentar crear el evento
-    $resultado = $eventoController->crearEvento($datos);
-
-    if ($resultado === true) {
-        header('Location: ../../../views/balneario/eventos/lista.php?success=' . urlencode('¡El evento ha sido creado exitosamente!'));
-    } else {
-        header('Location: ../../../views/balneario/eventos/lista.php?error=' . urlencode($resultado));
-    }
-    exit();
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
-
-header('Location: ../../../views/balneario/eventos/lista.php');
-exit();
 ?>

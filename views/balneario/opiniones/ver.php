@@ -116,7 +116,7 @@ if (!$opinion || $opinion['id_balneario'] != $_SESSION['id_balneario']) {
                     <p><strong>Email:</strong><br><?php echo htmlspecialchars($opinion['email_usuario']); ?></p>
                 </div>
                 <div class="col-md-4">
-                    <p><strong>Teléfono:</strong><br><?php echo htmlspecialchars($opinion['telefono_usuario'] ?? 'No proporcionado'); ?></p>
+                    <p><strong>Teléfono:</strong><br><?php echo htmlspecialchars($opinion['telefono_usuario']); ?></p>
                 </div>
             </div>
         </div>
@@ -134,14 +134,6 @@ if (!$opinion || $opinion['id_balneario'] != $_SESSION['id_balneario']) {
                          alt="Foto de la opinión" class="opinion-image">
                 </div>
             <?php endif; ?>
-
-            <div class="mt-4">
-                <p class="mb-2">
-                    <i class="bi bi-envelope me-2"></i>
-                    <strong>Suscripción a boletines:</strong>
-                    <?php echo $opinion['suscripcion_boletin'] ? 'Sí' : 'No'; ?>
-                </p>
-            </div>
         </div>
 
         <?php if ($opinion['opinion_validada'] === null): ?>
@@ -163,7 +155,7 @@ if (!$opinion || $opinion['id_balneario'] != $_SESSION['id_balneario']) {
             const accion = validada ? 'validar' : 'invalidar';
             if (confirm(`¿Está seguro que desea ${accion} esta opinión?`)) {
                 $.ajax({
-                    url: '../../../controllers/opiniones/validarOpinion.php',
+                    url: '../../../controllers/balneario/opiniones/validarOpinion.php',
                     method: 'POST',
                     data: { id_opinion: id, validada: validada },
                     success: function(response) {
