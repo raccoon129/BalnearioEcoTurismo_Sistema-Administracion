@@ -19,6 +19,53 @@
             font-size: 0.8rem;
             padding: 0.3rem 0.6rem;
         }
+        /* Estilos para el dropdown */
+        .dropdown-menu {
+            transform-origin: top right;
+            animation: dropdownAnimation 0.2s ease-out;
+            margin-left: -150px; /* Ajusta este valor según necesites */
+        }
+
+        .dropdown-menu.closing {
+            animation: dropdownClosing 0.2s ease-in;
+        }
+
+        @keyframes dropdownAnimation {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes dropdownClosing {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+        }
+
+        /* Ajuste para el botón del dropdown */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown .btn-link {
+            padding: 0.25rem 0.5rem;
+            transition: background-color 0.2s;
+            border-radius: 0.25rem;
+        }
+
+        .dropdown .btn-link:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -55,17 +102,19 @@
                         <div class="d-flex justify-content-between mb-3">
                             <h5 class="card-title"><?php echo htmlspecialchars($balneario['nombre_balneario']); ?></h5>
                             <div class="dropdown">
-                                <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown">
+                                <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                     <li>
-                                        <a class="dropdown-item" href="ver.php?id=<?php echo $balneario['id_balneario']; ?>">
+                                        <a class="dropdown-item d-flex align-items-center" 
+                                           href="ver.php?id=<?php echo $balneario['id_balneario']; ?>">
                                             <i class="bi bi-eye me-2"></i>Ver Detalles
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="editar.php?id=<?php echo $balneario['id_balneario']; ?>">
+                                        <a class="dropdown-item d-flex align-items-center" 
+                                           href="editar.php?id=<?php echo $balneario['id_balneario']; ?>">
                                             <i class="bi bi-pencil me-2"></i>Editar
                                         </a>
                                     </li>
@@ -107,7 +156,7 @@
 
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="badge bg-info status-badge">
+                                <span class="badge bg-secondary status-badge">
                                     <i class="bi bi-clock me-1"></i>
                                     <?php 
                                     echo date('h:i A', strtotime($balneario['horario_apertura'])) . 
@@ -116,14 +165,14 @@
                                     ?>
                                 </span>
                             </div>
-                            <div>
-                                <span class="badge bg-success status-badge">
-                                    <i class="bi bi-currency-dollar me-1"></i>
-                                    Adultos: $<?php echo number_format($balneario['precio_general_adultos'], 2); ?>
+                            <div class="d-flex flex-column align-items-end">
+                                <span class="badge bg-success status-badge mb-1">
+                                    <i class="bi bi-person me-1"></i>
+                                    $<?php echo number_format($balneario['precio_general_adultos'], 2); ?>
                                 </span>
-                                <span class="badge bg-info status-badge ms-2">
-                                    <i class="bi bi-currency-dollar me-1"></i>
-                                    Infantes: $<?php echo number_format($balneario['precio_general_infantes'], 2); ?>
+                                <span class="badge bg-info status-badge">
+                                    <i class="bi bi-person-heart me-1"></i>
+                                    $<?php echo number_format($balneario['precio_general_infantes'], 2); ?>
                                 </span>
                             </div>
                         </div>
@@ -316,6 +365,18 @@
                     toastr.warning('El horario de cierre debe ser posterior al horario de apertura');
                     $(this).val('');
                 }
+            });
+
+            // Manejar animación de cierre del dropdown
+            $('.dropdown').on('hide.bs.dropdown', function(e) {
+                const dropdown = $(this).find('.dropdown-menu');
+                dropdown.addClass('closing');
+                setTimeout(() => dropdown.removeClass('closing'), 200);
+            });
+
+            // Remover clase closing si se cancela el cierre
+            $('.dropdown').on('shown.bs.dropdown hidden.bs.dropdown', function() {
+                $(this).find('.dropdown-menu').removeClass('closing');
             });
         });
     </script>
