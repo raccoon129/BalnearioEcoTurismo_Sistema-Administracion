@@ -59,23 +59,24 @@ class BalnearioController {
     public function actualizarBalneario($id_balneario, $datos) {
         try {
             $query = "UPDATE balnearios SET 
-                     nombre_balneario = ?,
-                     descripcion_balneario = ?,
-                     direccion_balneario = ?,
-                     horario_apertura = ?,
-                     horario_cierre = ?,
-                     telefono_balneario = ?,
-                     email_balneario = ?,
-                     facebook_balneario = ?,
-                     instagram_balneario = ?,
-                     x_balneario = ?,
-                     tiktok_balneario = ?,
-                     precio_general = ?
+                        nombre_balneario = ?, 
+                        descripcion_balneario = ?,
+                        direccion_balneario = ?,
+                        horario_apertura = ?,
+                        horario_cierre = ?,
+                        telefono_balneario = ?,
+                        email_balneario = ?,
+                        facebook_balneario = ?,
+                        instagram_balneario = ?,
+                        x_balneario = ?,
+                        tiktok_balneario = ?,
+                        precio_general_adultos = ?,
+                        precio_general_infantes = ?
                      WHERE id_balneario = ?";
 
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param(
-                "sssssssssssdi",
+                "sssssssssssddi",
                 $datos['nombre_balneario'],
                 $datos['descripcion_balneario'],
                 $datos['direccion_balneario'],
@@ -87,16 +88,16 @@ class BalnearioController {
                 $datos['instagram_balneario'],
                 $datos['x_balneario'],
                 $datos['tiktok_balneario'],
-                $datos['precio_general'],
+                $datos['precio_general_adultos'],
+                $datos['precio_general_infantes'],
                 $id_balneario
             );
 
-            if ($stmt->execute()) {
-                return true;
-            }
-            throw new Exception($stmt->error);
+            return $stmt->execute();
+
         } catch (Exception $e) {
-            return "Error al actualizar el balneario: " . $e->getMessage();
+            error_log("Error en actualizarBalneario: " . $e->getMessage());
+            return "Error: " . $e->getMessage();
         }
     }
 
@@ -115,7 +116,8 @@ class BalnearioController {
             'horario_cierre' => 'Horario de cierre',
             'telefono_balneario' => 'Teléfono',
             'email_balneario' => 'Email',
-            'precio_general' => 'Precio general'
+            'precio_general_adultos' => 'Precio para adultos',
+            'precio_general_infantes' => 'Precio para infantes'
         ];
 
         foreach ($campos_requeridos as $campo => $nombre) {
@@ -134,9 +136,20 @@ class BalnearioController {
             $errores[] = "El teléfono debe tener 10 dígitos";
         }
 
-        // Validar precio
-        if (!empty($datos['precio_general']) && (!is_numeric($datos['precio_general']) || $datos['precio_general'] < 0)) {
-            $errores[] = "El precio debe ser un número positivo";
+        // Validar precios
+        if (!empty($datos['precio_general_adultos']) && (!is_numeric($datos['precio_general_adultos']) || $datos['precio_general_adultos'] <= 0)) {
+            $errores[] = "El precio para adultos debe ser un número positivo";
+        }
+
+        if (!empty($datos['precio_general_infantes']) && (!is_numeric($datos['precio_general_infantes']) || $datos['precio_general_infantes'] <= 0)) {
+            $errores[] = "El precio para infantes debe ser un número positivo";
+        }
+
+        // Validar que el precio de infantes no sea mayor al de adultos
+        if (!empty($datos['precio_general_adultos']) && !empty($datos['precio_general_infantes'])) {
+            if ($datos['precio_general_infantes'] >= $datos['precio_general_adultos']) {
+                $errores[] = "El precio para infantes no debe ser mayor o igual al precio para adultos";
+            }
         }
 
         // Validar horarios

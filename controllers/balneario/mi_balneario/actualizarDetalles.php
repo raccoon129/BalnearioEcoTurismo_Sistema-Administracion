@@ -23,29 +23,34 @@ try {
         'horario_cierre',
         'telefono_balneario',
         'email_balneario',
-        'precio_general'
+        'precio_general_adultos',
+        'precio_general_infantes'
     ];
 
     foreach ($campos_requeridos as $campo) {
         if (!isset($_POST[$campo]) || empty($_POST[$campo])) {
-            throw new Exception("El campo $campo es requerido");
+            throw new Exception("El campo {$campo} es requerido");
         }
     }
 
-    // Preparar datos para actualizar
+    // Log para debugging
+    error_log("POST data recibida: " . print_r($_POST, true));
+
+    // Preparar datos para actualización
     $datos = [
-        'nombre_balneario' => $_POST['nombre_balneario'],
-        'descripcion_balneario' => $_POST['descripcion_balneario'],
-        'direccion_balneario' => $_POST['direccion_balneario'],
+        'nombre_balneario' => trim($_POST['nombre_balneario']),
+        'descripcion_balneario' => trim($_POST['descripcion_balneario']),
+        'direccion_balneario' => trim($_POST['direccion_balneario']),
         'horario_apertura' => $_POST['horario_apertura'],
         'horario_cierre' => $_POST['horario_cierre'],
-        'telefono_balneario' => $_POST['telefono_balneario'],
-        'email_balneario' => $_POST['email_balneario'],
-        'facebook_balneario' => $_POST['facebook_balneario'] ?? null,
-        'instagram_balneario' => $_POST['instagram_balneario'] ?? null,
-        'x_balneario' => $_POST['x_balneario'] ?? null,
-        'tiktok_balneario' => $_POST['tiktok_balneario'] ?? null,
-        'precio_general' => $_POST['precio_general']
+        'telefono_balneario' => trim($_POST['telefono_balneario']),
+        'email_balneario' => trim($_POST['email_balneario']),
+        'facebook_balneario' => trim($_POST['facebook_balneario'] ?? ''),
+        'instagram_balneario' => trim($_POST['instagram_balneario'] ?? ''),
+        'x_balneario' => trim($_POST['x_balneario'] ?? ''),
+        'tiktok_balneario' => trim($_POST['tiktok_balneario'] ?? ''),
+        'precio_general_adultos' => (float)$_POST['precio_general_adultos'],
+        'precio_general_infantes' => (float)$_POST['precio_general_infantes']
     ];
 
     $balnearioController = new BalnearioController($db);
@@ -72,7 +77,13 @@ try {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage()
+        'message' => $e->getMessage(),
+        'debug_info' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
+            'post_data' => $_POST
+        ]
     ]);
 }
 ?> 
