@@ -115,12 +115,24 @@
                                value="<?php echo htmlspecialchars($balneario['nombre_balneario']); ?>" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Precio General</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="precio_general" 
-                                   value="<?php echo $balneario['precio_general']; ?>" 
-                                   step="0.01" min="0" required>
+                        <label class="form-label">Precios Generales</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">Adultos $</span>
+                                    <input type="number" class="form-control" name="precio_general_adultos" 
+                                           value="<?php echo $balneario['precio_general_adultos']; ?>"
+                                           step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">Infantes $</span>
+                                    <input type="number" class="form-control" name="precio_general_infantes" 
+                                           value="<?php echo $balneario['precio_general_infantes']; ?>"
+                                           step="0.01" min="0" required>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-12">
@@ -238,6 +250,20 @@
             
             if (horaCierre <= horaApertura) {
                 toastr.error('El horario de cierre debe ser posterior al horario de apertura');
+                return false;
+            }
+
+            // Validar precios
+            const precioAdultos = parseFloat($('input[name="precio_general_adultos"]').val());
+            const precioInfantes = parseFloat($('input[name="precio_general_infantes"]').val());
+
+            if (precioAdultos <= 0) {
+                toastr.error('El precio para adultos debe ser mayor a 0');
+                return false;
+            }
+
+            if (precioInfantes <= 0) {
+                toastr.error('El precio para infantes debe ser mayor a 0');
                 return false;
             }
 

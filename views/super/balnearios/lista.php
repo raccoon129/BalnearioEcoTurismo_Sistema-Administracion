@@ -119,7 +119,11 @@
                             <div>
                                 <span class="badge bg-success status-badge">
                                     <i class="bi bi-currency-dollar me-1"></i>
-                                    <?php echo number_format($balneario['precio_general'], 2); ?>
+                                    Adultos: $<?php echo number_format($balneario['precio_general_adultos'], 2); ?>
+                                </span>
+                                <span class="badge bg-info status-badge ms-2">
+                                    <i class="bi bi-currency-dollar me-1"></i>
+                                    Infantes: $<?php echo number_format($balneario['precio_general_infantes'], 2); ?>
                                 </span>
                             </div>
                         </div>
@@ -146,10 +150,22 @@
                                 <input type="text" class="form-control" name="nombre_balneario" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Precio General</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" name="precio_general" step="0.01" min="0" required>
+                                <label class="form-label">Precios</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text">Adultos $</span>
+                                            <input type="number" class="form-control" name="precio_general_adultos" 
+                                                   step="0.01" min="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text">Infantes $</span>
+                                            <input type="number" class="form-control" name="precio_general_infantes" 
+                                                   step="0.01" min="0" required>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12">

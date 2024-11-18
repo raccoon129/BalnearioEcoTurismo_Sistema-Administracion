@@ -23,8 +23,8 @@ try {
         'horario_apertura' => 'Horario de apertura',
         'horario_cierre' => 'Horario de cierre',
         'telefono_balneario' => 'Teléfono',
-        'email_balneario' => 'Email',
-        'precio_general' => 'Precio general'
+        'precio_general_adultos' => 'Precio general para adultos',
+        'precio_general_infantes' => 'Precio general para infantes'
     ];
 
     foreach ($camposRequeridos as $campo => $nombre) {
@@ -46,7 +46,8 @@ try {
         'instagram_balneario' => trim($_POST['instagram_balneario'] ?? ''),
         'x_balneario' => trim($_POST['x_balneario'] ?? ''),
         'tiktok_balneario' => trim($_POST['tiktok_balneario'] ?? ''),
-        'precio_general' => (float)$_POST['precio_general']
+        'precio_general_adultos' => (float)$_POST['precio_general_adultos'],
+        'precio_general_infantes' => (float)$_POST['precio_general_infantes']
     ];
 
     // Validaciones específicas
@@ -60,9 +61,13 @@ try {
         throw new Exception('El teléfono debe tener exactamente 10 dígitos');
     }
 
-    // Validar precio
-    if ($datos['precio_general'] <= 0) {
-        throw new Exception('El precio general debe ser mayor a 0');
+    // Validar precios
+    if ($datos['precio_general_adultos'] <= 0) {
+        throw new Exception('El precio para adultos debe ser mayor a 0');
+    }
+
+    if ($datos['precio_general_infantes'] <= 0) {
+        throw new Exception('El precio para infantes debe ser mayor a 0');
     }
 
     // Validar horarios

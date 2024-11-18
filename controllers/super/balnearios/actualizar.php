@@ -33,7 +33,8 @@ try {
         'instagram_balneario' => trim($_POST['instagram_balneario'] ?? ''),
         'x_balneario' => trim($_POST['x_balneario'] ?? ''),
         'tiktok_balneario' => trim($_POST['tiktok_balneario'] ?? ''),
-        'precio_general' => (float)$_POST['precio_general']
+        'precio_general_adultos' => (float)$_POST['precio_general_adultos'],
+        'precio_general_infantes' => (float)$_POST['precio_general_infantes']
     ];
 
     // Validaciones adicionales
@@ -49,8 +50,12 @@ try {
         throw new Exception('El teléfono debe tener 10 dígitos');
     }
 
-    if ($datos['precio_general'] < 0) {
-        throw new Exception('El precio no puede ser negativo');
+    if ($datos['precio_general_adultos'] <= 0) {
+        throw new Exception('El precio para adultos debe ser mayor a 0');
+    }
+
+    if ($datos['precio_general_infantes'] <= 0) {
+        throw new Exception('El precio para infantes debe ser mayor a 0');
     }
 
     // Actualizar balneario

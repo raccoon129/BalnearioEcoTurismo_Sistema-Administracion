@@ -254,10 +254,14 @@
                                         </p>
                                     </div>
                                     <div class="col-md-6">
-                                        <h6 class="text-muted mb-2">Precio General</h6>
+                                        <h6 class="text-muted mb-2">Precios Generales</h6>
+                                        <p class="mb-1">
+                                            <i class="bi bi-person me-2"></i>
+                                            <strong>Adultos:</strong> $<?php echo number_format($balneario['precio_general_adultos'], 2); ?>
+                                        </p>
                                         <p class="mb-0">
-                                            <i class="bi bi-currency-dollar me-2"></i>
-                                            <?php echo number_format($balneario['precio_general'], 2); ?>
+                                            <i class="bi bi-person-heart me-2"></i>
+                                            <strong>Infantes:</strong> $<?php echo number_format($balneario['precio_general_infantes'], 2); ?>
                                         </p>
                                     </div>
                                 </div>

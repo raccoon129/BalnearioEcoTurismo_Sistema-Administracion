@@ -99,18 +99,17 @@ class BalnearioSuperController {
      */
     public function crearBalneario($datos) {
         try {
-            $this->conn->begin_transaction();
-
             $query = "INSERT INTO balnearios (
                         nombre_balneario, descripcion_balneario, direccion_balneario,
                         horario_apertura, horario_cierre, telefono_balneario,
                         email_balneario, facebook_balneario, instagram_balneario,
-                        x_balneario, tiktok_balneario, precio_general
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        x_balneario, tiktok_balneario, 
+                        precio_general_adultos, precio_general_infantes
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param(
-                "sssssssssssd",
+                "sssssssssssdd",
                 $datos['nombre_balneario'],
                 $datos['descripcion_balneario'],
                 $datos['direccion_balneario'],
@@ -122,20 +121,19 @@ class BalnearioSuperController {
                 $datos['instagram_balneario'],
                 $datos['x_balneario'],
                 $datos['tiktok_balneario'],
-                $datos['precio_general']
+                $datos['precio_general_adultos'],
+                $datos['precio_general_infantes']
             );
 
             if (!$stmt->execute()) {
-                throw new Exception("Error al crear el balneario");
+                throw new Exception("Error al crear el balneario: " . $stmt->error);
             }
 
-            $id_balneario = $this->conn->insert_id;
-            $this->conn->commit();
-            return $id_balneario;
+            return $stmt->insert_id;
 
         } catch (Exception $e) {
-            $this->conn->rollback();
-            return "Error: " . $e->getMessage();
+            error_log("Error en crearBalneario: " . $e->getMessage());
+            return $e->getMessage();
         }
     }
 
@@ -156,12 +154,13 @@ class BalnearioSuperController {
                         instagram_balneario = ?,
                         x_balneario = ?,
                         tiktok_balneario = ?,
-                        precio_general = ?
+                        precio_general_adultos = ?,
+                        precio_general_infantes = ?
                      WHERE id_balneario = ?";
 
             $stmt = $this->conn->prepare($query);
             $stmt->bind_param(
-                "sssssssssssdi",
+                "sssssssssssddi",
                 $datos['nombre_balneario'],
                 $datos['descripcion_balneario'],
                 $datos['direccion_balneario'],
@@ -173,12 +172,15 @@ class BalnearioSuperController {
                 $datos['instagram_balneario'],
                 $datos['x_balneario'],
                 $datos['tiktok_balneario'],
-                $datos['precio_general'],
+                $datos['precio_general_adultos'],
+                $datos['precio_general_infantes'],
                 $id_balneario
             );
 
             return $stmt->execute();
+
         } catch (Exception $e) {
+            error_log("Error en actualizarBalneario: " . $e->getMessage());
             return "Error: " . $e->getMessage();
         }
     }
