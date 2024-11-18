@@ -547,11 +547,21 @@
         // Manejar envío del formulario de nuevo evento
         $('#formEvento').on('submit', function(e) {
             e.preventDefault();
+            console.log('Iniciando envío del formulario de evento');
             
             const formData = new FormData(this);
             const btnSubmit = $(this).find('button[type="submit"]');
             const btnText = btnSubmit.html();
             
+            // Log de datos a enviar
+            console.log('Datos del formulario:', {
+                titulo: formData.get('titulo'),
+                descripcion: formData.get('descripcion'),
+                fecha_inicio: formData.get('fecha_inicio'),
+                fecha_fin: formData.get('fecha_fin'),
+                imagen: formData.get('imagen')
+            });
+
             btnSubmit.prop('disabled', true)
                     .html('<i class="bi bi-hourglass-split me-2"></i>Guardando...');
 
@@ -564,18 +574,45 @@
                 dataType: 'json'
             })
             .done(function(response) {
+                console.log('Respuesta del servidor:', response);
+                
                 if (response.success) {
+                    // Cerrar modal
                     $('#modalEvento').modal('hide');
+                    
+                    // Mostrar mensaje de éxito
                     toastr.success(response.message);
-                    setTimeout(() => location.reload(), 1500);
+                    
+                    // Recargar página después de un breve delay
+                    setTimeout(() => {
+                        console.log('Recargando página...');
+                        window.location.reload();
+                    }, 1500);
                 } else {
-                    toastr.error(response.message);
+                    console.error('Error en la respuesta:', response.message);
+                    toastr.error(response.message || 'Error al crear el evento');
                 }
             })
-            .fail(function() {
-                toastr.error('Error al procesar la solicitud');
+            .fail(function(xhr, status, error) {
+                console.error('Error en la petición:', {
+                    status: status,
+                    error: error,
+                    response: xhr.responseText
+                });
+                
+                let errorMessage = 'Error al crear el evento';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.message || errorMessage;
+                    console.error('Detalles del error:', response);
+                } catch (e) {
+                    console.error('Error al parsear la respuesta:', xhr.responseText);
+                }
+                
+                toastr.error(errorMessage);
             })
             .always(function() {
+                console.log('Finalizando petición');
                 btnSubmit.prop('disabled', false).html(btnText);
             });
         });

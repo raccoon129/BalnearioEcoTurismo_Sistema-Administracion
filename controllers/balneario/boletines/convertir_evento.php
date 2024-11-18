@@ -2,12 +2,15 @@
 require_once '../../../config/database.php';
 require_once '../../../config/auth.php';
 require_once './BoletinController.php';
-require_once '../eventos/EventoController.php';
 
 header('Content-Type: application/json');
 session_start();
 
 try {
+    // Debug
+    error_log("POST data: " . print_r($_POST, true));
+    error_log("SESSION data: " . print_r($_SESSION, true));
+
     // Verificar autenticación
     $database = new Database();
     $db = $database->getConnection();
@@ -16,29 +19,20 @@ try {
     $auth->checkAuth();
     $auth->checkRole(['administrador_balneario']);
 
-    // Obtener el ID del usuario autenticado
-    $id_usuario = $auth->getUsuarioId();
-
-    // Verificar datos recibidos
-    if (!isset($_POST['id_evento']) || !isset($_POST['titulo_boletin']) || !isset($_POST['contenido_boletin'])) {
-        throw new Exception('Faltan datos requeridos');
+    // Validar datos recibidos
+    if (!isset($_POST['titulo_boletin']) || !isset($_POST['contenido_boletin'])) {
+        throw new Exception('Datos incompletos para crear el boletín');
     }
 
-    $id_evento = filter_var($_POST['id_evento'], FILTER_VALIDATE_INT);
-    if (!$id_evento) {
-        throw new Exception('ID de evento inválido');
+    // Usar el ID de usuario de la sesión
+    $id_usuario = $_SESSION['usuario_id'];
+    if (!$id_usuario) {
+        throw new Exception('Usuario no identificado');
     }
 
-    // Verificar que el evento pertenece al balneario
-    $eventoController = new EventoController($db);
-    $evento = $eventoController->obtenerEvento($id_evento);
-
-    if (!$evento || $evento['id_balneario'] != $_SESSION['id_balneario']) {
-        throw new Exception('No tiene permiso para convertir este evento');
-    }
-
-    // Crear el boletín usando el ID del usuario autenticado
     $boletinController = new BoletinController($db);
+    
+    // Crear el boletín como borrador
     $resultado = $boletinController->crearBoletin(
         $_POST['titulo_boletin'],
         $_POST['contenido_boletin'],
@@ -49,13 +43,14 @@ try {
     if ($resultado === true) {
         echo json_encode([
             'success' => true,
-            'message' => 'Evento convertido a boletín exitosamente'
+            'message' => 'Boletín creado exitosamente'
         ]);
     } else {
         throw new Exception($resultado);
     }
 
 } catch (Exception $e) {
+    error_log('Error en convertir_evento.php: ' . $e->getMessage());
     http_response_code(400);
     echo json_encode([
         'success' => false,
