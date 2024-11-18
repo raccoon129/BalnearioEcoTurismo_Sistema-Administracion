@@ -14,15 +14,22 @@ try {
     $auth->checkAuth();
     $auth->checkRole(['administrador_balneario']);
 
-    if (!isset($_POST['id_boletin'])) {
+    if (!isset($_GET['id_boletin'])) {
         throw new Exception('ID de boletín no proporcionado');
     }
 
-    $id_boletin = (int)$_POST['id_boletin'];
+    $id_boletin = (int)$_GET['id_boletin'];
     $boletinController = new BoletinController($db);
-    $resultado = $boletinController->eliminarBoletin($id_boletin, $_SESSION['id_balneario']);
+    $boletin = $boletinController->obtenerBoletin($id_boletin, $_SESSION['id_balneario']);
 
-    echo json_encode($resultado);
+    if (!$boletin) {
+        throw new Exception('Boletín no encontrado');
+    }
+
+    echo json_encode([
+        'success' => true,
+        'data' => $boletin
+    ]);
 
 } catch (Exception $e) {
     http_response_code(400);
@@ -30,5 +37,4 @@ try {
         'success' => false,
         'message' => $e->getMessage()
     ]);
-}
-?> 
+} 

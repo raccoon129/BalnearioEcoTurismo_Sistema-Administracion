@@ -24,7 +24,7 @@ class BoletinController {
                      FROM boletines b 
                      INNER JOIN usuarios u ON b.id_usuario = u.id_usuario 
                      WHERE u.id_balneario = ?
-                     ORDER BY COALESCE(b.fecha_envio_boletin, b.fecha_creacion_boletin) DESC";
+                     ORDER BY b.id_boletin DESC";
             
             $stmt = $this->conn->prepare($query);
             if (!$stmt) {
@@ -46,7 +46,7 @@ class BoletinController {
     }
 
     /**
-     * Obtiene estadísticas de los boletines
+     * Obtiene estadísticas de los boletines y suscriptores
      */
     public function obtenerEstadisticas($id_balneario) {
         try {
@@ -57,18 +57,23 @@ class BoletinController {
                 'total_suscriptores' => 0
             ];
 
-            // Contar boletines
+            // Verificar que el id_balneario sea válido
+            if (!$id_balneario || !is_numeric($id_balneario)) {
+                throw new Exception("ID de balneario no válido");
+            }
+
+            // Contar boletines filtrando por balneario
             $query = "SELECT 
                         COUNT(*) as total,
-                        SUM(CASE WHEN fecha_envio_boletin IS NULL THEN 1 ELSE 0 END) as borradores,
-                        SUM(CASE WHEN fecha_envio_boletin IS NOT NULL THEN 1 ELSE 0 END) as enviados
+                        SUM(CASE WHEN b.fecha_envio_boletin IS NULL THEN 1 ELSE 0 END) as borradores,
+                        SUM(CASE WHEN b.fecha_envio_boletin IS NOT NULL THEN 1 ELSE 0 END) as enviados
                      FROM boletines b
                      INNER JOIN usuarios u ON b.id_usuario = u.id_usuario
                      WHERE u.id_balneario = ?";
             
             $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta: " . $this->conn->error);
+            if ($stmt === false) {
+                throw new Exception("Error en la preparación de la consulta de boletines");
             }
 
             $stmt->bind_param("i", $id_balneario);
@@ -80,20 +85,26 @@ class BoletinController {
             $stats['borradores'] = $conteos['borradores'] ?? 0;
             $stats['enviados'] = $conteos['enviados'] ?? 0;
 
+            $stmt->close();
+
             // Contar suscriptores
-            $query = "SELECT COUNT(DISTINCT email_usuario_contacto) as total_suscriptores 
-                     FROM contactos 
-                     WHERE suscripcion_boletin = 1";
+            $query_suscriptores = "SELECT COUNT(DISTINCT email_usuario_contacto) as total_suscriptores 
+                                  FROM contactos 
+                                  WHERE suscripcion_boletin = 1 
+                                  AND email_usuario_contacto IS NOT NULL 
+                                  AND email_usuario_contacto != ''";
             
-            $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta: " . $this->conn->error);
+            $stmt = $this->conn->prepare($query_suscriptores);
+            if ($stmt === false) {
+                throw new Exception("Error en la preparación de la consulta de suscriptores");
             }
 
             $stmt->execute();
             $result = $stmt->get_result();
-            $stats['total_suscriptores'] = $result->fetch_assoc()['total_suscriptores'] ?? 0;
+            $suscriptores = $result->fetch_assoc();
+            $stats['total_suscriptores'] = $suscriptores['total_suscriptores'] ?? 0;
 
+            $stmt->close();
             return $stats;
 
         } catch (Exception $e) {
@@ -108,24 +119,51 @@ class BoletinController {
     }
 
     /**
-     * Obtiene los suscriptores
+     * Obtiene los suscriptores que se han suscrito al boletín
      */
     public function obtenerSuscriptores($id_balneario) {
         try {
+            // Debug
+            error_log("Obteniendo suscriptores para balneario ID: " . $id_balneario);
+
             $query = "SELECT DISTINCT 
-                        nombre_usuario_contacto as nombre_usuario,
-                        email_usuario_contacto as email_usuario,
-                        telefono_usuario_contacto as telefono_usuario
+                        nombre_usuario_contacto,
+                        email_usuario_contacto,
+                        telefono_usuario_contacto
                      FROM contactos 
-                     WHERE suscripcion_boletin = 1";
+                     WHERE suscripcion_boletin = 1 
+                     AND email_usuario_contacto IS NOT NULL
+                     AND email_usuario_contacto != ''
+                     ORDER BY nombre_usuario_contacto ASC";
             
             $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta: " . $this->conn->error);
+            if ($stmt === false) {
+                error_log("Error preparando consulta: " . $this->conn->error);
+                throw new Exception("Error al preparar la consulta de suscriptores");
             }
 
-            $stmt->execute();
-            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            if (!$stmt->execute()) {
+                error_log("Error ejecutando consulta: " . $stmt->error);
+                throw new Exception("Error al obtener suscriptores");
+            }
+
+            $result = $stmt->get_result();
+            $suscriptores = $result->fetch_all(MYSQLI_ASSOC);
+
+            // Debug
+            error_log("Suscriptores encontrados: " . count($suscriptores));
+
+            // Transformar resultados al formato esperado
+            $suscriptores_formateados = array_map(function($suscriptor) {
+                return [
+                    'nombre_usuario' => $suscriptor['nombre_usuario_contacto'],
+                    'email_usuario' => $suscriptor['email_usuario_contacto'],
+                    'telefono_usuario' => $suscriptor['telefono_usuario_contacto']
+                ];
+            }, $suscriptores);
+
+            $stmt->close();
+            return $suscriptores_formateados;
             
         } catch (Exception $e) {
             error_log("Error en obtenerSuscriptores: " . $e->getMessage());
@@ -134,7 +172,7 @@ class BoletinController {
     }
 
     /**
-     * Obtiene un boletín específico
+     * Obtiene un boletín específico verificando que pertenezca al balneario
      */
     public function obtenerBoletin($id_boletin, $id_balneario) {
         try {
@@ -219,6 +257,15 @@ class BoletinController {
                 throw new Exception('Boletín no encontrado');
             }
 
+            // Obtener nombre del balneario
+            $query = "SELECT nombre_balneario FROM balnearios WHERE id_balneario = ?";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bind_param("i", $id_balneario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $balneario = $result->fetch_assoc();
+            $nombreBalneario = $balneario ? $balneario['nombre_balneario'] : 'Balneario';
+
             // Obtener suscriptores
             $suscriptores = $this->obtenerSuscriptores($id_balneario);
             if (empty($suscriptores)) {
@@ -228,18 +275,19 @@ class BoletinController {
             $enviados = 0;
             $errores = [];
 
-            // Preparar contenido del correo
-            $contenidoHTML = $this->crearPlantillaEmail(
-                $boletin['titulo_boletin'],
-                $boletin['contenido_boletin']
-            );
-
             // Enviar a cada suscriptor
             foreach ($suscriptores as $suscriptor) {
                 try {
+                    // Crear asunto del correo con el nombre del balneario
+                    $asunto = "[{$nombreBalneario}] {$boletin['titulo_boletin']}";
+
+                    // Preparar el contenido del correo
+                    $contenido = "Estimado(a) {$suscriptor['nombre_usuario']},\n\n";
+                    $contenido .= $boletin['contenido_boletin'];
+
                     $resultado = $this->emailController->enviarBoletinMasivo(
-                        $boletin['titulo_boletin'],
-                        $contenidoHTML,
+                        $asunto,
+                        $contenido,
                         [$suscriptor],
                         $id_balneario
                     );
@@ -267,6 +315,7 @@ class BoletinController {
 
             return [
                 'success' => $enviados > 0,
+                'message' => 'Boletín enviado exitosamente',
                 'enviados' => $enviados,
                 'total_suscriptores' => count($suscriptores),
                 'errores' => $errores
@@ -281,40 +330,6 @@ class BoletinController {
                 'errores' => [$e->getMessage()]
             ];
         }
-    }
-
-    /**
-     * Crea la plantilla HTML para el correo
-     */
-    private function crearPlantillaEmail($titulo, $contenido) {
-        return '
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { font-family: Arial, sans-serif; line-height: 1.6; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
-                .content { padding: 20px; background-color: #f9f9f9; }
-                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>' . htmlspecialchars($titulo) . '</h1>
-                </div>
-                <div class="content">
-                    ' . nl2br(htmlspecialchars($contenido)) . '
-                </div>
-                <div class="footer">
-                    <p>Este correo fue enviado porque estás suscrito a nuestro boletín.</p>
-                    <p>Si no deseas recibir más correos, puedes cancelar tu suscripción en tu próxima visita.</p>
-                </div>
-            </div>
-        </body>
-        </html>';
     }
 
     /**
@@ -370,6 +385,93 @@ class BoletinController {
         } catch (Exception $e) {
             error_log("Error en crearBoletin: " . $e->getMessage());
             return $e->getMessage();
+        }
+    }
+
+    /**
+     * Actualiza un boletín existente
+     */
+    public function actualizarBoletin($id_boletin, $titulo, $contenido, $id_balneario) {
+        try {
+            // Verificar que el boletín existe y pertenece al balneario
+            $boletin = $this->obtenerBoletin($id_boletin, $id_balneario);
+            if (!$boletin) {
+                throw new Exception("Boletín no encontrado");
+            }
+
+            // Verificar que no haya sido enviado
+            if ($boletin['fecha_envio_boletin'] !== null) {
+                throw new Exception("No se puede editar un boletín ya enviado");
+            }
+
+            $query = "UPDATE boletines 
+                     SET titulo_boletin = ?, contenido_boletin = ? 
+                     WHERE id_boletin = ?";
+            
+            $stmt = $this->conn->prepare($query);
+            if (!$stmt) {
+                throw new Exception("Error en la preparación de la consulta");
+            }
+
+            $stmt->bind_param("ssi", $titulo, $contenido, $id_boletin);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error al actualizar el boletín");
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Boletín actualizado exitosamente'
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en actualizarBoletin: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Elimina un boletín
+     */
+    public function eliminarBoletin($id_boletin, $id_balneario) {
+        try {
+            // Verificar que el boletín existe y pertenece al balneario
+            $boletin = $this->obtenerBoletin($id_boletin, $id_balneario);
+            if (!$boletin) {
+                throw new Exception("Boletín no encontrado");
+            }
+
+            // Verificar que no haya sido enviado
+            if ($boletin['fecha_envio_boletin'] !== null) {
+                throw new Exception("No se puede eliminar un boletín ya enviado");
+            }
+
+            $query = "DELETE FROM boletines WHERE id_boletin = ?";
+            $stmt = $this->conn->prepare($query);
+            if (!$stmt) {
+                throw new Exception("Error en la preparación de la consulta");
+            }
+
+            $stmt->bind_param("i", $id_boletin);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error al eliminar el boletín");
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Boletín eliminado exitosamente'
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en eliminarBoletin: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
     }
 }

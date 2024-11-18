@@ -14,13 +14,16 @@ try {
     $auth->checkAuth();
     $auth->checkRole(['administrador_balneario']);
 
-    if (!isset($_POST['id_boletin'])) {
-        throw new Exception('ID de boletín no proporcionado');
+    if (!isset($_POST['id_boletin']) || !isset($_POST['titulo']) || !isset($_POST['contenido'])) {
+        throw new Exception('Faltan datos requeridos');
     }
 
     $id_boletin = (int)$_POST['id_boletin'];
+    $titulo = trim($_POST['titulo']);
+    $contenido = trim($_POST['contenido']);
+
     $boletinController = new BoletinController($db);
-    $resultado = $boletinController->eliminarBoletin($id_boletin, $_SESSION['id_balneario']);
+    $resultado = $boletinController->actualizarBoletin($id_boletin, $titulo, $contenido, $_SESSION['id_balneario']);
 
     echo json_encode($resultado);
 
@@ -30,5 +33,4 @@ try {
         'success' => false,
         'message' => $e->getMessage()
     ]);
-}
-?> 
+} 

@@ -284,7 +284,7 @@
                                         <th>Nombre</th>
                                         <th>Email</th>
                                         <th>Teléfono</th>
-                                        <th>Fecha de Suscripción</th>
+                                        
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -296,7 +296,7 @@
                                             <td><?php echo htmlspecialchars($suscriptor['nombre_usuario']); ?></td>
                                             <td><?php echo htmlspecialchars($suscriptor['email_usuario']); ?></td>
                                             <td><?php echo htmlspecialchars($suscriptor['telefono_usuario'] ?? 'No proporcionado'); ?></td>
-                                            <td><?php echo date('d/m/Y H:i', strtotime($suscriptor['fecha_registro_opinion'])); ?></td>
+                                            
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

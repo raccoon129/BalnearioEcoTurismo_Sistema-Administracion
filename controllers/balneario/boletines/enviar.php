@@ -7,7 +7,6 @@ header('Content-Type: application/json');
 session_start();
 
 try {
-    // Verificar autenticación
     $database = new Database();
     $db = $database->getConnection();
     $auth = new Auth($db);
@@ -26,7 +25,9 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Boletín enviado exitosamente',
-            'detalles' => $resultado
+            'enviados' => $resultado['enviados'],
+            'total_suscriptores' => $resultado['total_suscriptores'],
+            'errores' => $resultado['errores'] ?? []
         ]);
     } else {
         throw new Exception($resultado['message']);
