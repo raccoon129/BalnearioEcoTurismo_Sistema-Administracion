@@ -4,21 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Promociones</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"/>
+    <style>
+        .promo-card {
+            transition: transform 0.2s;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .promo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .promo-date {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+        }
+        .nav-pills .nav-link {
+            color: #6c757d;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            margin-right: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .nav-pills .nav-link:hover:not(.active) {
+            background-color: #f8f9fa;
+        }
+        .promo-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .promo-card:hover .promo-actions {
+            opacity: 1;
+        }
+        .stats-card {
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stats-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 1rem;
+        }
+        .card-title a:hover {
+            color: #0d6efd !important;
+            transition: color 0.2s;
+        }
+        .promo-actions .btn {
+            margin-left: 0.25rem;
+        }
+        .promo-actions .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+            color: white;
+        }
+        .promo-actions .btn-info:hover {
+            background-color: #138496;
+            border-color: #117a8b;
+        }
+    </style>
 </head>
-<body class="bg-light p-4">
+<body class="bg-light">
     <?php
     require_once '../../../config/database.php';
     require_once '../../../config/auth.php';
     require_once '../../../controllers/balneario/promociones/PromocionController.php';
 
-    // Verificar autenticación
     session_start();
     $database = new Database();
     $db = $database->getConnection();
@@ -29,90 +105,293 @@
 
     $promocionController = new PromocionController($db);
     $promociones = $promocionController->obtenerPromociones($_SESSION['id_balneario']);
+
+    // Clasificar promociones
+    $promocionesProximas = [];
+    $promocionesActivas = [];
+    $promocionesFinalizadas = [];
+    $hoy = strtotime('today');
+
+    foreach ($promociones as $promocion) {
+        $inicio = strtotime($promocion['fecha_inicio_promocion']);
+        $fin = strtotime($promocion['fecha_fin_promocion']);
+        
+        if ($hoy < $inicio) {
+            $promocionesProximas[] = $promocion;
+        } elseif ($hoy > $fin) {
+            $promocionesFinalizadas[] = $promocion;
+        } else {
+            $promocionesActivas[] = $promocion;
+        }
+    }
     ?>
 
-    <div class="container-fluid">
+    <div class="container py-4">
+        <!-- Encabezado -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-tag me-2"></i>Promociones</h2>
+            <div>
+                <h2 class="mb-1">Gestión de Promociones</h2>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-tag me-2"></i>
+                    Administra las promociones de tu balneario
+                </p>
+            </div>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPromocion">
                 <i class="bi bi-plus-lg me-2"></i>Nueva Promoción
             </button>
         </div>
 
-        <?php if (isset($_GET['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            <?php echo htmlspecialchars($_GET['success']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <!-- Estadísticas Rápidas -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-tag-fill"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2"><?php echo count($promocionesActivas); ?></h3>
+                        <p class="text-muted mb-0">Promociones Activas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-calendar-plus"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2"><?php echo count($promocionesProximas); ?></h3>
+                        <p class="text-muted mb-0">Próximas Promociones</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stats-card">
+                    <div class="card-body">
+                        <div class="stats-icon bg-secondary bg-opacity-10 text-secondary">
+                            <i class="bi bi-calendar-x"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2"><?php echo count($promocionesFinalizadas); ?></h3>
+                        <p class="text-muted mb-0">Promociones Finalizadas</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <?php endif; ?>
 
-        <?php if (isset($_GET['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <?php echo htmlspecialchars($_GET['error']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php endif; ?>
+        <!-- Navegación por pestañas -->
+        <ul class="nav nav-pills mb-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#activas">
+                    <i class="bi bi-tag-fill me-2"></i>Activas
+                    <span class="badge bg-primary ms-2"><?php echo count($promocionesActivas); ?></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#proximas">
+                    <i class="bi bi-calendar-plus me-2"></i>Próximas
+                    <span class="badge bg-success ms-2"><?php echo count($promocionesProximas); ?></span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#finalizadas">
+                    <i class="bi bi-calendar-x me-2"></i>Finalizadas
+                    <span class="badge bg-secondary ms-2"><?php echo count($promocionesFinalizadas); ?></span>
+                </a>
+            </li>
+        </ul>
 
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="tablaPromociones" class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Título</th>
-                                <th>Fecha Inicio</th>
-                                <th>Fecha Fin</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($promociones as $promocion): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($promocion['titulo_promocion']); ?></td>
-                                <td><?php echo date('d/m/Y', strtotime($promocion['fecha_inicio_promocion'])); ?></td>
-                                <td><?php echo date('d/m/Y', strtotime($promocion['fecha_fin_promocion'])); ?></td>
-                                <td>
-                                    <?php
-                                    $hoy = strtotime('today');
-                                    $inicio = strtotime($promocion['fecha_inicio_promocion']);
-                                    $fin = strtotime($promocion['fecha_fin_promocion']);
-                                    
-                                    if ($hoy < $inicio):
-                                    ?>
-                                        <span class="badge bg-info">Próxima</span>
-                                    <?php elseif ($hoy > $fin): ?>
-                                        <span class="badge bg-secondary">Finalizada</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-success">Activa</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-info" onclick="verDetalles(<?php echo $promocion['id_promocion']; ?>)">
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content">
+            <!-- Promociones Activas -->
+            <div id="activas" class="tab-pane fade show active">
+                <div class="row g-4">
+                    <?php foreach ($promocionesActivas as $promocion): ?>
+                    <div class="col-md-6">
+                        <div class="card promo-card h-100">
+                            <div class="card-body position-relative">
+                                <!-- Acciones rápidas -->
+                                <div class="promo-actions">
+                                    <a href="ver.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="btn btn-sm btn-info">
                                         <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-primary" onclick="editarPromocion(<?php echo $promocion['id_promocion']; ?>)">
+                                    </a>
+                                    <a href="editar.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="btn btn-sm btn-primary">
                                         <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger" onclick="confirmarEliminacion(<?php echo $promocion['id_promocion']; ?>)">
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="confirmarEliminacion(<?php echo $promocion['id_promocion']; ?>)">
                                         <i class="bi bi-trash"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-success" onclick="convertirABoletin(
-                                        <?php echo $promocion['id_promocion']; ?>, 
-                                        '<?php echo htmlspecialchars($promocion['titulo_promocion']); ?>', 
-                                        '<?php echo htmlspecialchars($promocion['descripcion_promocion']); ?>', 
-                                        '<?php echo $promocion['fecha_inicio_promocion']; ?>', 
-                                        '<?php echo $promocion['fecha_fin_promocion']; ?>'
-                                    )">
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="convertirABoletin(<?php echo $promocion['id_promocion']; ?>)">
                                         <i class="bi bi-envelope"></i>
                                     </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                                </div>
+
+                                <h5 class="card-title mb-3">
+                                    <a href="ver.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="text-decoration-none text-dark">
+                                        <?php echo htmlspecialchars($promocion['titulo_promocion']); ?>
+                                    </a>
+                                </h5>
+                                
+                                <p class="card-text mb-3">
+                                    <?php echo nl2br(htmlspecialchars(substr($promocion['descripcion_promocion'], 0, 150))); ?>...
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-success status-badge">
+                                        <i class="bi bi-tag-fill me-1"></i>En curso
+                                    </span>
+                                    <div class="promo-date">
+                                        <i class="bi bi-calendar-range me-1"></i>
+                                        <?php 
+                                        echo date('d/m/Y', strtotime($promocion['fecha_inicio_promocion'])) . 
+                                             ' - ' . 
+                                             date('d/m/Y', strtotime($promocion['fecha_fin_promocion'])); 
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+
+                    <?php if (empty($promocionesActivas)): ?>
+                    <div class="col-12">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-tag display-1"></i>
+                            <p class="mt-3">No hay promociones activas</p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Promociones Próximas -->
+            <div id="proximas" class="tab-pane fade">
+                <div class="row g-4">
+                    <?php foreach ($promocionesProximas as $promocion): ?>
+                    <div class="col-md-6">
+                        <div class="card promo-card h-100">
+                            <div class="card-body position-relative">
+                                <!-- Acciones rápidas -->
+                                <div class="promo-actions">
+                                    <a href="ver.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="editar.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="confirmarEliminacion(<?php echo $promocion['id_promocion']; ?>)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="convertirABoletin(<?php echo $promocion['id_promocion']; ?>)">
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
+                                </div>
+
+                                <h5 class="card-title mb-3">
+                                    <a href="ver.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="text-decoration-none text-dark">
+                                        <?php echo htmlspecialchars($promocion['titulo_promocion']); ?>
+                                    </a>
+                                </h5>
+                                
+                                <p class="card-text mb-3">
+                                    <?php echo nl2br(htmlspecialchars(substr($promocion['descripcion_promocion'], 0, 150))); ?>...
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-info status-badge">
+                                        <i class="bi bi-calendar-plus me-1"></i>Próxima
+                                    </span>
+                                    <div class="promo-date">
+                                        <i class="bi bi-calendar-range me-1"></i>
+                                        <?php 
+                                        echo date('d/m/Y', strtotime($promocion['fecha_inicio_promocion'])) . 
+                                             ' - ' . 
+                                             date('d/m/Y', strtotime($promocion['fecha_fin_promocion'])); 
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+
+                    <?php if (empty($promocionesProximas)): ?>
+                    <div class="col-12">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-calendar-plus display-1"></i>
+                            <p class="mt-3">No hay promociones próximas</p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Promociones Finalizadas -->
+            <div id="finalizadas" class="tab-pane fade">
+                <div class="row g-4">
+                    <?php foreach ($promocionesFinalizadas as $promocion): ?>
+                    <div class="col-md-6">
+                        <div class="card promo-card h-100">
+                            <div class="card-body position-relative">
+                                <!-- Acciones rápidas -->
+                                <div class="promo-actions">
+                                    <a href="ver.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="confirmarEliminacion(<?php echo $promocion['id_promocion']; ?>)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <h5 class="card-title mb-3">
+                                    <a href="ver.php?id=<?php echo $promocion['id_promocion']; ?>" 
+                                       class="text-decoration-none text-dark">
+                                        <?php echo htmlspecialchars($promocion['titulo_promocion']); ?>
+                                    </a>
+                                </h5>
+                                
+                                <p class="card-text mb-3">
+                                    <?php echo nl2br(htmlspecialchars(substr($promocion['descripcion_promocion'], 0, 150))); ?>...
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-secondary status-badge">
+                                        <i class="bi bi-calendar-x me-1"></i>Finalizada
+                                    </span>
+                                    <div class="promo-date">
+                                        <i class="bi bi-calendar-range me-1"></i>
+                                        <?php 
+                                        echo date('d/m/Y', strtotime($promocion['fecha_inicio_promocion'])) . 
+                                             ' - ' . 
+                                             date('d/m/Y', strtotime($promocion['fecha_fin_promocion'])); 
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+
+                    <?php if (empty($promocionesFinalizadas)): ?>
+                    <div class="col-12">
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-calendar-x display-1"></i>
+                            <p class="mt-3">No hay promociones finalizadas</p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -127,7 +406,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formPromocion" action="../../../controllers/balneario/promociones/guardarPromocion.php" method="POST">
+                    <form id="formPromocion" action="../../../controllers/balneario/promociones/guardar.php" method="POST">
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label">Título de la Promoción</label>
@@ -178,7 +457,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="formEliminar" action="../../../controllers/balneario/promociones/eliminarPromocion.php" method="POST">
+                    <form id="formEliminar" action="../../../controllers/balneario/promociones/eliminar.php" method="POST">
                         <input type="hidden" name="id_promocion" id="id_promocion_eliminar">
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-trash me-2"></i>Eliminar Promoción
@@ -189,126 +468,13 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmación de Conversión a Boletín -->
-    <div class="modal fade" id="modalConfirmarConversion" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Convertir a Boletín</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Desea crear un boletín con la información de esta promoción?</p>
-                    <p>Se creará un borrador que podrá revisar antes de enviarlo.</p>
-                    <div id="previewContenido" class="mt-3 p-3 bg-light rounded">
-                        <!-- Aquí se mostrará la vista previa del contenido -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-success" id="btnConfirmarConversion">
-                        <i class="bi bi-envelope me-2"></i>Crear Boletín
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Incluir Modal de Conversión -->
+    <?php include 'components/modal_conversion_boletin.php'; ?>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-            $('#tablaPromociones').DataTable({
-                responsive: true,
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                },
-                order: [[1, 'desc']]
-            });
-
-            // Validación de fechas
-            document.querySelector('input[name="fecha_fin"]').addEventListener('change', function() {
-                var fechaInicio = document.querySelector('input[name="fecha_inicio"]').value;
-                var fechaFin = this.value;
-                
-                if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
-                    alert('La fecha de fin no puede ser anterior a la fecha de inicio');
-                    this.value = '';
-                }
-            });
-        });
-
-        function verDetalles(id) {
-            window.location.href = 'ver.php?id=' + id;
-        }
-
-        function editarPromocion(id) {
-            window.location.href = 'editar.php?id=' + id;
-        }
-
-        function confirmarEliminacion(id) {
-            document.getElementById('id_promocion_eliminar').value = id;
-            new bootstrap.Modal(document.getElementById('modalConfirmarEliminacion')).show();
-        }
-
-        let datosConversion = null;
-
-        function convertirABoletin(id, titulo, descripcion, fechaInicio, fechaFin) {
-            // Formatear las fechas
-            const fechaInicioObj = new Date(fechaInicio);
-            const fechaFinObj = new Date(fechaFin);
-            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            
-            const fechaInicioFormateada = fechaInicioObj.toLocaleDateString('es-ES', opciones);
-            const fechaFinFormateada = fechaFinObj.toLocaleDateString('es-ES', opciones);
-            
-            // Crear el contenido del boletín
-            const contenido = `${descripcion}\n\nVálido del ${fechaInicioFormateada} hasta ${fechaFinFormateada}`;
-            
-            // Guardar datos para usar después de la confirmación
-            datosConversion = {
-                id_promocion: id,
-                titulo_boletin: titulo,
-                contenido_boletin: contenido
-            };
-
-            // Mostrar vista previa en el modal
-            document.getElementById('previewContenido').innerHTML = `
-                <strong>${titulo}</strong><br><br>
-                ${contenido.replace(/\n/g, '<br>')}
-            `;
-
-            // Mostrar el modal
-            new bootstrap.Modal(document.getElementById('modalConfirmarConversion')).show();
-        }
-
-        // Manejar la confirmación
-        document.getElementById('btnConfirmarConversion').addEventListener('click', function() {
-            if (!datosConversion) return;
-
-            // Enviar datos al controlador
-            $.post('../../../controllers/balneario/boletines/convertir_promocion.php', datosConversion)
-                .done(function(response) {
-                    if (response.success) {
-                        toastr.success('Promoción convertida a boletín exitosamente');
-                        setTimeout(() => window.location.href = '../boletines/lista.php', 1500);
-                    } else {
-                        toastr.error(response.message || 'Error al convertir la promoción');
-                    }
-                })
-                .fail(function() {
-                    toastr.error('Error al procesar la solicitud');
-                });
-
-            // Cerrar el modal
-            bootstrap.Modal.getInstance(document.getElementById('modalConfirmarConversion')).hide();
-        });
-    </script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="js/convertir_boletin.js"></script>
 </body>
 </html>
