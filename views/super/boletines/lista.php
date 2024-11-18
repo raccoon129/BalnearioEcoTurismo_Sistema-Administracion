@@ -110,5 +110,71 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     <script src="js/boletines.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Configuración de toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "timeOut": "3000"
+        };
+
+        // Manejar envío del formulario de nuevo boletín
+        $('#formBoletin').on('submit', function(e) {
+            e.preventDefault();
+
+            const btnSubmit = $(this).find('button[type="submit"]');
+            const btnHtml = btnSubmit.html();
+            btnSubmit.prop('disabled', true)
+                    .html('<i class="bi bi-hourglass-split me-2"></i>Guardando...');
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    // Cerrar el modal
+                    $('#modalBoletin').modal('hide');
+                    
+                    // Mostrar mensaje de éxito
+                    toastr.success(response.message, null, {
+                        onHidden: function() {
+                            // Recargar la página después de que se oculte el mensaje
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    toastr.error(response.message || 'Error al guardar el boletín');
+                    btnSubmit.prop('disabled', false).html(btnHtml);
+                }
+            })
+            .fail(function(xhr) {
+                let errorMessage = 'Error al guardar el boletín';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.message || errorMessage;
+                } catch (e) {
+                    console.error('Error al procesar la respuesta:', e);
+                }
+                toastr.error(errorMessage);
+                btnSubmit.prop('disabled', false).html(btnHtml);
+            });
+        });
+
+        // Limpiar formulario al cerrar modal
+        $('#modalBoletin').on('hidden.bs.modal', function() {
+            $('#formBoletin')[0].reset();
+            $('#previewTitulo').text('');
+            $('#previewContenido').html('');
+            // Rehabilitar botón si estaba deshabilitado
+            const btnSubmit = $(this).find('button[type="submit"]');
+            btnSubmit.prop('disabled', false)
+                    .html('<i class="bi bi-save me-2"></i>Guardar Borrador');
+        });
+    });
+    </script>
 </body>
 </html> 

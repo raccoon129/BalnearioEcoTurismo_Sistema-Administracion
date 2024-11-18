@@ -276,8 +276,11 @@ class BoletinSuperController {
      */
     public function obtenerBalnearios() {
         try {
-            $query = "SELECT b.*, 
-                     (SELECT COUNT(*) FROM boletines WHERE id_balneario = b.id_balneario) as total_boletines
+            $query = "SELECT b.id_balneario, 
+                             b.nombre_balneario,
+                             b.precio_general_adultos,
+                             b.precio_general_infantes,
+                             (SELECT COUNT(*) FROM boletines WHERE id_balneario = b.id_balneario) as total_boletines
                      FROM balnearios b 
                      ORDER BY b.nombre_balneario";
             
@@ -312,7 +315,8 @@ class BoletinSuperController {
                 case 'superadmin':
                     $query = "SELECT DISTINCT email_usuario, nombre_usuario 
                              FROM usuarios 
-                             WHERE rol_usuario = 'superadministrador'";
+                             WHERE rol_usuario = 'superadministrador'
+                             AND email_usuario IS NOT NULL";
                     break;
 
                 case 'admin':
@@ -324,18 +328,16 @@ class BoletinSuperController {
                         $params[] = $id_balneario;
                         $types .= "i";
                     }
+                    $query .= " AND email_usuario IS NOT NULL";
                     break;
 
                 case 'suscriptores':
-                    $query = "SELECT DISTINCT email_usuario, nombre_usuario 
-                             FROM opiniones_usuarios 
+                    $query = "SELECT DISTINCT 
+                                email_usuario_contacto as email_usuario, 
+                                nombre_usuario_contacto as nombre_usuario
+                             FROM contactos 
                              WHERE suscripcion_boletin = 1 
-                             AND email_usuario IS NOT NULL";
-                    if ($id_balneario) {
-                        $query .= " AND id_balneario = ?";
-                        $params[] = $id_balneario;
-                        $types .= "i";
-                    }
+                             AND email_usuario_contacto IS NOT NULL";
                     break;
 
                 default:
@@ -343,16 +345,12 @@ class BoletinSuperController {
             }
 
             $stmt = $this->conn->prepare($query);
-            if (!$stmt) {
-                throw new Exception("Error en la preparación de la consulta: " . $this->conn->error);
-            }
-
             if (!empty($params)) {
                 $stmt->bind_param($types, ...$params);
             }
 
             if (!$stmt->execute()) {
-                throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
+                throw new Exception("Error al ejecutar la consulta");
             }
 
             $result = $stmt->get_result();
@@ -897,10 +895,12 @@ class BoletinSuperController {
      */
     public function obtenerCorreosSuscriptores() {
         try {
-            $query = "SELECT DISTINCT email_usuario, nombre_usuario 
-                     FROM opiniones_usuarios 
+            $query = "SELECT DISTINCT 
+                        email_usuario_contacto as email_usuario,
+                        nombre_usuario_contacto as nombre_usuario
+                     FROM contactos 
                      WHERE suscripcion_boletin = 1 
-                     AND email_usuario IS NOT NULL";
+                     AND email_usuario_contacto IS NOT NULL";
 
             $stmt = $this->conn->prepare($query);
             if (!$stmt->execute()) {

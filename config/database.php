@@ -2,7 +2,7 @@
 // Configuración de la base de datos usando MySQLi
 class Database {
     private $host = "localhost";
-    private $db_name = "drift3_balnearioecoturismo";
+    private $db_name = "balnearioecoturismo";
     private $username = "root";
     private $password = "";
     public $conn;

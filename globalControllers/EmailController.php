@@ -19,17 +19,29 @@ class EmailController {
     public function enviarBoletinMasivo($titulo, $contenido, $destinatarios, $id_balneario = null) {
         try {
             error_log("Iniciando envío de boletín masivo");
-            error_log("Destinatarios: " . print_r($destinatarios, true));
+            error_log("Total destinatarios: " . count($destinatarios));
             
             $enviados = 0;
             $errores = [];
             
+            // Validaciones previas
             if (empty($titulo)) {
                 throw new Exception("El título del boletín no puede estar vacío");
             }
             
             if (empty($contenido)) {
                 throw new Exception("El contenido del boletín no puede estar vacío");
+            }
+
+            if (empty($destinatarios)) {
+                throw new Exception("No hay destinatarios para enviar el boletín");
+            }
+
+            // Validar estructura de destinatarios
+            foreach ($destinatarios as $destinatario) {
+                if (!isset($destinatario['email_usuario']) || !isset($destinatario['nombre_usuario'])) {
+                    throw new Exception("Formato de destinatario inválido");
+                }
             }
 
             // Si hay id_balneario, obtener su nombre
