@@ -5,12 +5,13 @@ body {
 }
 
 .sidebar {
-    width: 250px;
-    background: linear-gradient(to bottom, #f7f7f7, #d3d3d3);
-    padding: 20px;
-    position: fixed;
     height: 100%;
-    margin-top: 56px;
+    width: 250px;
+    position: fixed;
+    left: 0;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    overflow-y: auto;
 }
 
 .sidebar a {

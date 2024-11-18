@@ -23,6 +23,65 @@
         .container-fluid {
             padding: 0 15px; /* Padding consistente */
         }
+
+        .sidebar {
+            background: linear-gradient(180deg, 
+                #5c2e91 0%,
+                #2e3192 50%,
+                #2e3192 100%
+            );
+            color: white;
+            height: calc(100vh - 56px); /* Ajuste para evitar desbordamiento */
+            width: 250px;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 1000;
+            padding-top: 15px; /* Reducir el padding superior */
+        }
+
+        .sidebar h4 {
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin: 0 0 15px 0; /* Ajustar márgenes */
+        }
+
+        .sidebar a {
+            display: block;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .sidebar a.active {
+            background-color: rgba(255, 255, 255, 0.25);
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Ajuste para el contenido principal */
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            padding-top: 76px; /* 56px del navbar + 20px de padding */
+            min-height: 100vh;
+        }
     </style>
 </head>
 <body>
@@ -39,8 +98,7 @@
     </nav>
 
     <div class="sidebar">
-        <h4><strong>Panel administrativo para Balnearios</strong></h4>
-        <br>
+        <h4 class="mb-4"><strong>Panel administrativo para Balnearios</strong></h4>
         <a href="#inicio" data-page="views/dashboard/bienvenida_balneario.php" id="inicioLink">
             <i class="fas fa-home"></i> Inicio
         </a>
