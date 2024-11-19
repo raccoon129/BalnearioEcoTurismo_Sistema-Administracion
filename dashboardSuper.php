@@ -60,6 +60,9 @@ try {
         <a href="#boletines" data-page="views/super/boletines/lista.php">
             <i class="fas fa-envelope"></i> Boletines
         </a>
+        <a href="#contactos" data-page="views/super/contactos/lista.php">
+            <i class="fas fa-phone"></i> Contactos
+        </a>
     </div>
 
     <div class="content" style="background-color: #f8f9fa;">
@@ -79,7 +82,8 @@ try {
             '#promociones': 'views/super/promociones/lista.php',
             '#opiniones': 'views/super/opiniones/lista.php',
             '#boletines': 'views/super/boletines/lista.php',
-            '#configuraciones': 'views/super/configuraciones/lista.php'
+            '#configuraciones': 'views/super/configuraciones/lista.php',
+            '#contactos': 'views/super/contactos/lista.php'
         };
 
         function loadPage(page, element) {

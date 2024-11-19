@@ -2,16 +2,16 @@
     <div class="contenido-pie">
         <!-- Contenido principal que siempre está visible -->
         <div class="contenido-principal">
-            Sistema de Administración para Balnearios v0.9 rev T3 2024
+            Sistema de Administración para Balnearios EcoTurismo v0.9 rev T4 2024
             <span class="separador">|</span>
-            EcoTurismo - Gobierno del Estado de Hidalgo
+            Gobierno del Estado de Hidalgo
         </div>
         
         <!-- Contenido que se revela al pasar el cursor -->
         <div class="contenido-expandible">
-            Desarrollado por VGB & EMS
+            Desarrollado por EMS & VGB
             <span class="separador">-</span>
-            Algunos Derechos Reservados
+            Todos los Derechos Reservados
             <span class="separador">|</span>
             Ingeniería en Sistemas Computacionales - ITESHU
         </div>
