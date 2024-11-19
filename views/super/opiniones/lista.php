@@ -73,7 +73,7 @@
     $opiniones = $opinionController->obtenerOpiniones($filtros);
     ?>
 
-    <div class="container-fluid py-4">
+    <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-chat-square-text me-2"></i>Gestión de Opiniones</h2>
             <button class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#filtrosCollapse">

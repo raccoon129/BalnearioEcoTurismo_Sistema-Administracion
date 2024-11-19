@@ -93,7 +93,7 @@
     $eventos = $eventoController->obtenerEventos($filtros);
     ?>
 
-    <div class="container-fluid py-4">
+    <div class="container py-4">
         <!-- Encabezado -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-calendar-event me-2"></i>Gestionar Eventos</h2>

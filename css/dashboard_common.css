@@ -3,8 +3,10 @@
     margin-left: 250px;
     padding: 20px;
     padding-top: 76px;
-    min-height: 100vh;
+    height: 100vh;
     background-color: #f8f9fa;
+    position: relative;
+    overflow: hidden;
 }
 
 .navbar-logo {
@@ -24,6 +26,19 @@
 
 #contentFrame {
     width: 100%;
-    height: calc(100vh - 96px);
+    height: 100%;
     border: none;
+    position: absolute;
+    top: 76px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Aseguramos que el body y html no tengan scroll */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
 } 
