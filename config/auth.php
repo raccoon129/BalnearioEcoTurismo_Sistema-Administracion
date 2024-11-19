@@ -15,7 +15,7 @@ class Auth {
     // Verificar si el usuario está autenticado
     public function checkAuth() {
         if (!isset($_SESSION['usuario_id'])) {
-            header('Location: login.php');
+            header('Location: index.php');
             exit();
         }
         // Almacenar el ID del usuario cuando se verifica la autenticación

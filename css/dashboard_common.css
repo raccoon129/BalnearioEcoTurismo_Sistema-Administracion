@@ -1,0 +1,29 @@
+/* Estilos comunes para ambos dashboards */
+.content {
+    margin-left: 250px;
+    padding: 20px;
+    padding-top: 76px;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+.navbar-logo {
+    height: 24px;
+    width: auto;
+    margin-right: 15px;
+    object-fit: contain;
+}
+
+.navbar {
+    padding: 0.5rem 1rem;
+}
+
+.container-fluid {
+    padding: 0 15px;
+}
+
+#contentFrame {
+    width: 100%;
+    height: calc(100vh - 96px);
+    border: none;
+} 

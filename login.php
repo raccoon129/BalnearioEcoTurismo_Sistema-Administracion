@@ -21,6 +21,8 @@ if (isset($_SESSION['usuario_id'])) {
         .login-form {
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px; /* Reducir padding */
+            border-radius: 8px; /* Bordes redondeados */
         }
 
         .form-control:focus {
@@ -36,7 +38,7 @@ if (isset($_SESSION['usuario_id'])) {
         .btn-primary {
             background-color: #0056b3;
             border: none;
-            padding: 12px;
+            padding: 10px; /* Reducir padding */
             font-weight: 500;
             letter-spacing: 0.5px;
             transition: all 0.3s ease;
@@ -79,7 +81,7 @@ if (isset($_SESSION['usuario_id'])) {
 
         /* Contenedor con dimensiones fijas para evitar rebote */
         .gif-container {
-            height: 120px; /* Ajusta según el tamaño de tu GIF */
+            height: 100px; /* Ajusta según el tamaño de tu GIF */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -105,14 +107,12 @@ if (isset($_SESSION['usuario_id'])) {
         <div class="row login-container">
             <!-- Formulario de Login -->
             <div class="col-12 col-md-4 login-form d-flex align-items-center">
-                <div class="w-100 p-4 p-md-5">
-                    <div class="text-center mb-5">
-                        <!-- Contenedor para la imagen con dimensiones fijas -->
-                        <div class="gif-container mb-4">
+                <div class="w-100 p-4">
+                    <div class="text-center mb-4">
+                        <div class="gif-container mb-3">
                             <img src="assets/img/1.gif" alt="Logo Animado" class="logo-gif">
                         </div>
                         <h2 class="fw-bold">Sistema de Administración para Balnearios</h2>
-                        <br>
                         <h3 class="fw-bold">Bienvenido</h3>
                         <p class="text-muted">Ingrese sus credenciales para continuar</p>
                     </div>
@@ -123,7 +123,7 @@ if (isset($_SESSION['usuario_id'])) {
                     </div>
 
                     <form id="loginForm" action="controllers/auth/login_controller.php" method="POST">
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="email" class="form-label">Correo Electrónico</label>
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -134,7 +134,7 @@ if (isset($_SESSION['usuario_id'])) {
                             </div>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="password" class="form-label">Contraseña</label>
                             <div class="input-group">
                                 <span class="input-group-text">
@@ -158,7 +158,7 @@ if (isset($_SESSION['usuario_id'])) {
 
             <!-- Imagen de fondo -->
             <div class="col-md-8 d-none d-md-block p-0">
-                <div class="login-image"></div>
+                <div class="login-image" style="background: url('assets/img/balneario.jpeg') center/cover no-repeat;"></div>
             </div>
         </div>
     </div>
